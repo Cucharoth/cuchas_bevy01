@@ -7,3 +7,7 @@ pub struct Enemy {
     pub direction: Vec2,
     pub spawn: (f32, f32),
 }
+
+
+#[derive(Component)]
+pub struct WorldMapTheme;

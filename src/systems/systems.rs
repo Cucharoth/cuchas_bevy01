@@ -12,7 +12,7 @@ pub fn transition_to_game_state(
         if *current_app_state != AppState::Game {
             //commands.insert_resource(NextState(Some(AppState::Game)));
             next_app_state.set(AppState::Game);
-            println!("Entered AppState::Game")
+            println!("IN GAME")
         }
         
     }
@@ -33,7 +33,7 @@ pub fn transition_to_menu_state(
             next_app_state.set(AppState::MainMenu);
             next_game_state.set(GameState::Paused);
             next_ingame_state.set(InGameState::WorldMap);
-            println!("Entered AppState::MainMenu")
+            println!("IN MAIN MENU")
         }
         
     }

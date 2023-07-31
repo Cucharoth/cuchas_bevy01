@@ -1,10 +1,11 @@
-use crate::prelude::*;
-use world_map::*;
-use world_map::components::*;
 use crate::components::*;
-use resources::*;
+use crate::prelude::*;
+use bevy::audio::{self, PlaybackMode};
 use bevy::render::camera::ScalingMode;
 use bevy::window::PrimaryWindow;
+use resources::*;
+use world_map::components::*;
+use world_map::*;
 
 use super::enemy::EnemyPlugin;
 use super::player::PlayerPlugin;
@@ -17,26 +18,36 @@ pub struct WorldMapPlugin;
 
 impl Plugin for WorldMapPlugin {
     fn build(&self, app: &mut App) {
-        app
-        .add_plugins((
-            PlayerPlugin,
-            EnemyPlugin
-        ))
-        .add_systems(Update,
-            (
-                enemy_hit_player,
+        app.add_plugins((PlayerPlugin, EnemyPlugin))
+            .add_systems(
+                Update,
+                (enemy_hit_player,)
+                    .run_if(in_state(AppState::Game))
+                    .run_if(in_state(GameState::Running))
+                    .run_if(in_state(InGameState::WorldMap)),
             )
-            .run_if(in_state(AppState::Game))
-            .run_if(in_state(GameState::Running))
-            .run_if(in_state(InGameState::WorldMap))
-        )
-        .add_systems(Update,
-            (
-                timer_after_collission_check,
-                global_timer_update
+            .add_systems(
+                Update,
+                (timer_after_collission_check, global_timer_update)
+                    .run_if(in_state(InGameState::WorldMap)),
             )
-            .run_if(in_state(InGameState::WorldMap))
-        );
+            //audio handle
+            .add_systems(
+                OnEnter(AppState::Game),
+                play_map_music.run_if(in_state(InGameState::WorldMap)),
+            )
+            .add_systems(
+                OnExit(InGameState::WorldMap),
+                stop_map_music.run_if(in_state(AppState::Game)),
+            )
+            .add_systems(
+                OnEnter(GameState::Paused),
+                volume_in_pause.run_if(in_state(InGameState::WorldMap)),
+            )
+            .add_systems(
+                OnEnter(GameState::Running),
+                volume_in_running.run_if(in_state(InGameState::WorldMap)),
+            );
     }
 }
 
@@ -80,7 +91,9 @@ pub fn enemy_hit_player(
     mut commands: Commands,
     mut player_query: Query<(Entity, &Transform), With<Player>>,
     enemy_query: Query<(Entity, &Transform), With<Enemy>>,
-    mut next_game_state: ResMut<NextState<GameState>>
+    audio_control: Query<&AudioSink, With<WorldMapTheme>>,
+    mut next_game_state: ResMut<NextState<GameState>>,
+    assest_server: Res<AssetServer>,
 ) {
     if let Ok((player_entity, player_transform)) = player_query.get_single_mut() {
         for (enemy_entity, enemy_transform) in enemy_query.iter() {
@@ -93,14 +106,25 @@ pub fn enemy_hit_player(
 
             if distance < player_radius + enemy_radius {
                 println!("Collision!, ATTACK");
-                commands.insert_resource(PlayerEntity{
-                    entity: player_entity
+                commands.insert_resource(PlayerEntity {
+                    entity: player_entity,
                 });
-                commands.insert_resource(EnemyEntity{
-                    entity: enemy_entity
+                commands.insert_resource(EnemyEntity {
+                    entity: enemy_entity,
+                });
+                let monster_found_audio = assest_server.load("audio/effects/monster_found.wav");
+                commands.spawn(
+                    AudioBundle {
+                    source: monster_found_audio,
+                    settings: PlaybackSettings {
+                        mode: PlaybackMode::Once,
+                        ..default()
+                    },
+                    ..Default::default()
                 });
                 commands.init_resource::<AfterEnemyCollisionTimer>();
                 next_game_state.set(GameState::Paused);
+                audio_control.get_single().unwrap().set_volume(0.4);
             }
         }
     }
@@ -120,7 +144,7 @@ pub fn timer_after_collission_check(
     mut commands: Commands,
     collision_timer: Option<Res<AfterEnemyCollisionTimer>>,
     mut next_state: ResMut<NextState<InGameState>>,
-    mut next_game_state: ResMut<NextState<GameState>>
+    mut next_game_state: ResMut<NextState<GameState>>,
 ) {
     if let Some(timer) = &collision_timer {
         if timer.timer.finished() {
@@ -132,18 +156,40 @@ pub fn timer_after_collission_check(
     }
 }
 
-pub fn fight(mut characters: Query<(&mut Player, &mut Enemy)>, input: Res<Input<KeyCode>>) {
-    println!("{:?}", characters);
-    for (mut player, mut enemy) in &mut characters {
-        //println!("{}, {}", player., enemy );
-        /*if input.pressed(KeyCode::E) {
-            if rand::random() {
-                enemy.health -= player.damage;
-            } else {
-                player.health -= enemy.damage;
-            }
-        }*/
+fn play_map_music(mut commands: Commands, asset_server: Res<AssetServer>) {
+    let theme = asset_server.load("audio/2-19 Venus Lighthouse.wav");
+    commands.spawn((
+        AudioBundle {
+            source: theme,
+            settings: PlaybackSettings {
+                mode: PlaybackMode::Loop,
+                //volume: Volume::Relative(1.0),
+                ..Default::default()
+            },
+        },
+        WorldMapTheme,
+    ));
+}
 
-        //println!("Player health: {}, Enemy health: {}", player.health, enemy.health);
+fn stop_map_music(
+    mut commands: Commands,
+    world_map_theme_query: Query<(Entity, &AudioSink), With<WorldMapTheme>>,
+) {
+    if let Ok((theme_entity, music_control)) = world_map_theme_query.get_single() {
+        music_control.stop();
+        commands.entity(theme_entity).despawn();
     }
 }
+
+fn volume_in_pause(audio_query: Query<&AudioSink, With<WorldMapTheme>>) {
+    if let Ok(audio_control) = audio_query.get_single() {
+        audio_control.set_volume(0.3);
+    }
+}
+
+fn volume_in_running(audio_query: Query<&AudioSink, With<WorldMapTheme>>) {
+    if let Ok(audio_control) = audio_query.get_single() {
+        audio_control.set_volume(1.0);
+    }
+}
+

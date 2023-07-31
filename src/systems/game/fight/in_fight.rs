@@ -1,11 +1,12 @@
-use bevy::window::PrimaryWindow;
-use crate::fight::components::Enemy;
+use super::components::*;
 use super::enemy::*;
 use super::player::*;
 use super::resources::*;
-use super::components::*;
 use crate::components::Player;
+use crate::fight::components::Enemy;
 use crate::prelude::*;
+use bevy::audio::*;
+use bevy::window::PrimaryWindow;
 
 pub struct FightPlugin;
 
@@ -17,14 +18,25 @@ impl Plugin for FightPlugin {
             .add_systems(
                 Update,
                 (
-                    intro_timer, 
+                    intro_timer,
                     flip_sprites.after(intro_timer),
                     move_enemy_sprite,
                     move_player_sprite,
-                    intro_timer_check
+                    intro_timer_check,
                 )
-                .run_if(in_state(FightState::Intro))
-                .run_if(in_state(GameState::Running))
+                    .run_if(in_state(FightState::Intro))
+                    .run_if(in_state(GameState::Running)),
+            )
+            //Audio handling
+            .add_systems(OnEnter(InGameState::Fight), play_fight_music)
+            .add_systems(OnExit(InGameState::Fight), stop_fight_music)
+            .add_systems(
+                OnEnter(GameState::Paused),
+                volume_in_pause.run_if(in_state(InGameState::Fight)),
+            )
+            .add_systems(
+                OnEnter(GameState::Running),
+                volume_in_running.run_if(in_state(InGameState::Fight)),
             );
     }
 }
@@ -67,7 +79,6 @@ pub fn flip_sprites(
         if let Some(half_intro_time) = half_intro_time {
             if half_intro_time.timer.finished() {
                 commands.remove_resource::<HalfIntroTime>();
-                println!("FLIP");
                 //player_transform.rotation = Quat::from_rotation_y(180.0);
                 player_sprite.flip_x = false;
             }
@@ -80,26 +91,33 @@ fn move_enemy_sprite(
     mut enemy_transform_query: Query<(&mut Transform, &Movement), With<Enemy>>,
     window_query: Query<&Window, With<PrimaryWindow>>,
     intro_timer: Res<IntroTime>,
-    time: Res<Time>
+    time: Res<Time>,
 ) {
     let window = window_query.get_single().unwrap();
     let mut enemy_transform = enemy_transform_query.get_single_mut().unwrap();
-    let direction = Vec3::new(enemy_transform.1.direction.x, enemy_transform.1.direction.y, 0.0);
+    let direction = Vec3::new(
+        enemy_transform.1.direction.x,
+        enemy_transform.1.direction.y,
+        0.0,
+    );
     enemy_transform.0.translation += direction * enemy_transform.1.speed * time.delta_seconds();
     if intro_timer.timer.finished() {
         commands.remove_resource::<IntroTime>();
-
     }
 }
 
 fn move_player_sprite(
     mut player_transform_query: Query<(&mut Transform, &Movement), With<Player>>,
     window_query: Query<&Window, With<PrimaryWindow>>,
-    time: Res<Time>
+    time: Res<Time>,
 ) {
     let window = window_query.get_single().unwrap();
     let mut player_transform = player_transform_query.get_single_mut().unwrap();
-    let direction = Vec3::new(player_transform.1.direction.x, player_transform.1.direction.y, 0.0);
+    let direction = Vec3::new(
+        player_transform.1.direction.x,
+        player_transform.1.direction.y,
+        0.0,
+    );
     player_transform.0.translation += direction * player_transform.1.speed * time.delta_seconds();
 }
 
@@ -108,7 +126,7 @@ fn intro_timer_check(
     player_query: Query<&Player>,
     enemy_query: Query<&Enemy>,
     intro_timer: Res<IntroTime>,
-    mut next_fight_state: ResMut<NextState<FightState>>
+    mut next_fight_state: ResMut<NextState<FightState>>,
 ) {
     if intro_timer.timer.finished() {
         commands.remove_resource::<IntroTime>();
@@ -123,8 +141,47 @@ fn intro_timer_check(
         }
         if player_starts {
             next_fight_state.set(FightState::PlayerTurn);
+            println!("PLAYER TURN")
         } else {
             next_fight_state.set(FightState::EnemyTurn);
+            println!("ENEMY TURN")
         }
+    }
+}
+
+fn play_fight_music(mut commands: Commands, asset_server: Res<AssetServer>) {
+    let fight_theme = asset_server.load("audio/1-17 Battle! [Saturos].wav");
+    commands.spawn((
+        AudioBundle {
+            source: fight_theme,
+            settings: PlaybackSettings {
+                mode: PlaybackMode::Loop,
+                //volume: Volume::Relative(1.0),
+                ..Default::default()
+            },
+        },
+        BattleTheme,
+    ));
+}
+
+fn stop_fight_music(
+    mut commands: Commands,
+    fight_theme_query: Query<(Entity, &AudioSink), With<BattleTheme>>,
+) {
+    if let Ok((theme_entity, music_control)) = fight_theme_query.get_single() {
+        music_control.stop();
+        commands.entity(theme_entity).despawn();
+    }
+}
+
+fn volume_in_pause(battle_theme_query: Query<&AudioSink, With<BattleTheme>>) {
+    if let Ok(battle_theme) = battle_theme_query.get_single() {
+        battle_theme.set_volume(0.3);
+    }
+}
+
+fn volume_in_running(battle_theme_query: Query<&AudioSink, With<BattleTheme>>) {
+    if let Ok(battle_theme) = battle_theme_query.get_single() {
+        battle_theme.set_volume(1.0);
     }
 }

@@ -1,14 +1,14 @@
-use bevy::window::PrimaryWindow;
 use super::components::*;
 use crate::prelude::*;
+use bevy::window::PrimaryWindow;
 
 pub struct EnemyPlugin;
 
 impl Plugin for EnemyPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(InGameState::Fight), spawn_enemy)
-        .add_systems(OnExit(AppState::Game), despawn_enemies)
-        .add_systems(OnExit(InGameState::Fight), despawn_enemies);
+            .add_systems(OnExit(AppState::Game), despawn_enemies)
+            .add_systems(OnExit(InGameState::Fight), despawn_enemies);
     }
 }
 
@@ -19,6 +19,12 @@ pub fn spawn_enemy(
 ) {
     let window = window_query.get_single().unwrap();
 
+    let enemy = Enemy {
+        health: 100,
+        damage: 10,
+        speed: 200,
+    };
+    println!("{:?}", &enemy);
     commands.spawn((
         SpriteBundle {
             transform: Transform::from_xyz(
@@ -33,23 +39,16 @@ pub fn spawn_enemy(
             texture: asset_server.load("Enemy/devil.png"),
             ..default()
         },
-        Enemy {
-            health: 100,
-            damage: 10,
-            speed: 100
-        },
+        enemy,
         Movement {
             direction: Vec2::new(-1.0, 0.0).normalize(),
-            speed: 900.0
-        }
+            speed: 900.0,
+        },
     ));
 }
 
-fn despawn_enemies(
-    mut commands: Commands,
-    enemy_query: Query<Entity, With<Enemy>>
-) {
-    for enemy_entity in enemy_query.iter(){
+fn despawn_enemies(mut commands: Commands, enemy_query: Query<Entity, With<Enemy>>) {
+    for enemy_entity in enemy_query.iter() {
         commands.entity(enemy_entity).despawn();
-    } 
+    }
 }
