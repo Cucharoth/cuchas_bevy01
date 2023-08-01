@@ -6,6 +6,7 @@ use crate::components::Player;
 use crate::fight::components::Enemy;
 use crate::prelude::*;
 use bevy::audio::*;
+use bevy::transform;
 use bevy::window::PrimaryWindow;
 
 pub struct FightPlugin;
@@ -23,12 +24,14 @@ impl Plugin for FightPlugin {
                     move_enemy_sprite,
                     move_player_sprite,
                     intro_timer_check,
+                    move_background,
                 )
                     .run_if(in_state(FightState::Intro))
                     .run_if(in_state(GameState::Running)),
             )
+            .add_systems(OnExit(InGameState::Fight), despawn_background)
             //Audio handling
-            .add_systems(OnEnter(InGameState::Fight), play_fight_music)
+            .add_systems(OnEnter(InGameState::Fight), (play_fight_music))
             .add_systems(OnExit(InGameState::Fight), stop_fight_music)
             .add_systems(
                 OnEnter(GameState::Paused),
@@ -50,9 +53,15 @@ pub enum FightState {
     DamageHappening,
 }
 
-fn setup(mut commands: Commands, mut next_fight_state: ResMut<NextState<FightState>>) {
+fn setup(
+    mut commands: Commands,
+    mut next_fight_state: ResMut<NextState<FightState>>,
+    asset_server: Res<AssetServer>,
+    window_query: Query<&Window, With<PrimaryWindow>>
+) {
     commands.init_resource::<IntroTime>();
     commands.init_resource::<HalfIntroTime>();
+    load_background(&mut commands, asset_server, window_query);
     next_fight_state.set(FightState::Intro);
 }
 
@@ -183,5 +192,66 @@ fn volume_in_pause(battle_theme_query: Query<&AudioSink, With<BattleTheme>>) {
 fn volume_in_running(battle_theme_query: Query<&AudioSink, With<BattleTheme>>) {
     if let Ok(battle_theme) = battle_theme_query.get_single() {
         battle_theme.set_volume(1.0);
+    }
+}
+
+fn load_background(
+    commands: &mut Commands,
+    asset_server: Res<AssetServer>,
+    window_query: Query<&Window, With<PrimaryWindow>>,
+) {
+    let window = window_query.get_single().unwrap();
+    commands.spawn((
+        SpriteBundle {
+            transform: Transform::from_xyz(0.0 + (window.width() / 4.0), window.height() / 2.0, 0.0),
+            sprite: Sprite {
+                custom_size: Some(Vec2::new(window.width() + (window.width() / 2.0) , window.height())),
+                flip_x: true,
+                ..default()
+            },
+            texture: asset_server.load("Background/mathieu-chauderlot-room-0023-layer-5.png"),
+            ..Default::default()
+        },
+        FightBackGround,
+        Movement {
+            direction: Vec2::new(1.0, 0.0).normalize(),
+            speed: 500.0
+        }
+    ));
+
+    /*commands.spawn(ImageBundle {
+        style: Style {
+            width: Val::Percent(100.0),
+            height: Val::Percent(100.0),
+            //margin: UiRect::new(Val::Px(8.0), Val::Px(8.0), Val::Px(8.0), Val::Px(8.0)),
+            ..Default::default()
+        },
+        image: asset_server
+            .load("Background/mathieu-chauderlot-room-0023-layer-5.png")
+            .into(),
+        ..Default::default()
+    });*/
+}
+
+fn move_background(
+    mut background_query: Query<(&mut Transform, &Movement), With<FightBackGround>>,
+    time: Res<Time>
+) {
+    if let Ok((mut transform, movement)) = background_query.get_single_mut() {
+        let direction = Vec3::new(
+            movement.direction.x,
+            movement.direction.y,
+            0.0
+        );
+        transform.translation += direction * movement.speed * time.delta_seconds();
+    }
+}
+
+fn despawn_background(
+    mut commands: Commands,
+    background_query: Query<Entity, With<FightBackGround>>
+) {
+    if let Ok(entity) = background_query.get_single() {
+        commands.entity(entity).despawn();
     }
 }

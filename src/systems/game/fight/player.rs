@@ -29,7 +29,7 @@ pub fn spawn_player(
 
     commands.spawn((
         SpriteBundle {
-            transform: Transform::from_xyz(0.0 + (window.width() / 10.0), window.height() / 7.0, 0.0),
+            transform: Transform::from_xyz(0.0 + (window.width() / 10.0), window.height() / 7.0, 900.0),
             sprite: Sprite {
                 custom_size: Some(Vec2::new(300.0, 300.0)),
                 flip_x: true,

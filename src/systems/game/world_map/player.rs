@@ -15,6 +15,7 @@ impl Plugin for PlayerPlugin {
             )
             .run_if(in_state(AppState::Game))
             .run_if(in_state(GameState::Running))
+            .run_if(in_state(InGameState::WorldMap))
         )
         .add_systems(OnExit(AppState::Game), despawn_player)
         .add_systems(OnExit(InGameState::WorldMap), despawn_player);

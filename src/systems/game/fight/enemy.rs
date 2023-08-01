@@ -29,7 +29,7 @@ pub fn spawn_enemy(
         SpriteBundle {
             transform: Transform::from_xyz(
                 window.width() - window.width() / 8.0,
-                window.height() - window.height() / 4.0,
+                window.height() - window.height() / 2.0,
                 0.0,
             ),
             sprite: Sprite {

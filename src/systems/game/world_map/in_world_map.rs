@@ -41,6 +41,10 @@ impl Plugin for WorldMapPlugin {
                 stop_map_music.run_if(in_state(AppState::Game)),
             )
             .add_systems(
+                OnExit(AppState::Game),
+                stop_map_music
+            )
+            .add_systems(
                 OnEnter(GameState::Paused),
                 volume_in_pause.run_if(in_state(InGameState::WorldMap)),
             )

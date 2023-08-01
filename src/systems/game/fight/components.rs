@@ -21,3 +21,6 @@ pub struct Movement{
 
 #[derive(Component)]
 pub struct BattleTheme;
+
+#[derive(Component)]
+pub struct FightBackGround;
