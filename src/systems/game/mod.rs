@@ -18,7 +18,7 @@ impl Plugin for GamePlugin {
             .init_resource::<PlayerStatus>()
             .add_plugins((
                 WorldMapPlugin,
-                FightPlugin
+                FightPlugin,
             ))
             .add_systems(Update, toggle_game_state.run_if(in_state(AppState::Game)));
     }

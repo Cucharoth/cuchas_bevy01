@@ -1,24 +1,24 @@
+use crate::components::Player;
 use crate::prelude::*;
 use bevy::window::PrimaryWindow;
-use crate::components::Player;
 
 pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app
-        .add_systems(OnEnter(AppState::Game), spawn_player)
-        .add_systems(Update,
-            (
-                character_movement.before(confine_player_movement),
-                confine_player_movement
+        app.add_systems(OnEnter(AppState::Game), spawn_player)
+            .add_systems(
+                Update,
+                (
+                    character_movement.before(confine_player_movement),
+                    confine_player_movement,
+                )
+                    .run_if(in_state(AppState::Game))
+                    .run_if(in_state(GameState::Running))
+                    .run_if(in_state(InGameState::WorldMap)),
             )
-            .run_if(in_state(AppState::Game))
-            .run_if(in_state(GameState::Running))
-            .run_if(in_state(InGameState::WorldMap))
-        )
-        .add_systems(OnExit(AppState::Game), despawn_player)
-        .add_systems(OnExit(InGameState::WorldMap), despawn_player);
+            .add_systems(OnExit(AppState::Game), despawn_player)
+            .add_systems(OnExit(InGameState::WorldMap), despawn_player);
     }
 }
 
@@ -50,13 +50,10 @@ pub fn spawn_player(
     ));
 }
 
-
-fn despawn_player(
-    mut commands: Commands,
-    player_query: Query<Entity, With<Player>>
-) {
-    let player_entity = player_query.get_single().unwrap();
-    commands.entity(player_entity).despawn();
+fn despawn_player(mut commands: Commands, player_query: Query<Entity, With<Player>>) {
+    if let Ok(player_entity) = player_query.get_single() {
+        commands.entity(player_entity).despawn();
+    }
 }
 
 pub fn character_movement(

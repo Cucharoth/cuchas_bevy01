@@ -4,7 +4,7 @@ use crate::prelude::*;
 pub fn toggle_game_state(
     mut commands: Commands,
     keyboar_input: Res<Input<KeyCode>>,
-    game_state: Res<State<GameState>>
+    game_state: Res<State<GameState>>,
 ){
     if keyboar_input.just_pressed(KeyCode::Escape) {
         let current_game_state = game_state.get();

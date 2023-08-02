@@ -1,5 +1,7 @@
+pub mod fight;
 pub mod main_menu;
 use crate::systems::ui::main_menu::menu::MainMenuPlugin;
+use crate::systems::ui::fight::FightUIPlugin;
 use bevy::prelude::*;
 use bevy_ui_navigation::{DefaultNavigationPlugins, systems::InputMapping};
 
@@ -8,7 +10,7 @@ pub struct UiPlugin;
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, set_key_mapping)
-        .add_plugins((DefaultNavigationPlugins, MainMenuPlugin));
+        .add_plugins((DefaultNavigationPlugins, MainMenuPlugin, FightUIPlugin));
     }
 }
 

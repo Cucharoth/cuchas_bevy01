@@ -22,7 +22,7 @@ pub fn spawn_enemy(
     let enemy = Enemy {
         health: 100,
         damage: 10,
-        speed: 200,
+        speed: 80,
     };
     println!("{:?}", &enemy);
     commands.spawn((

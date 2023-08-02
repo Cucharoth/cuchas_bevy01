@@ -13,7 +13,7 @@ mod prelude {
 }
 
 use prelude::*;
-use systems::{systems::{transition_to_game_state, transition_to_menu_state}, ui::UiPlugin};
+use systems::{systems::{DevPlugin}, ui::UiPlugin};
 
 
 fn main() {
@@ -22,10 +22,10 @@ fn main() {
         .add_plugins((
             DefaultPlugins.set(ImagePlugin::default_nearest()).build(),
             GamePlugin,
-            UiPlugin
+            UiPlugin,
+            DevPlugin
         ))
         .add_systems(Startup, spawn_camera)
-        .add_systems(Update, (transition_to_game_state, transition_to_menu_state))
         .run();
 }
 

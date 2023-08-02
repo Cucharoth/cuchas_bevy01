@@ -15,6 +15,7 @@ pub struct PlayerStatus {
     pub health: u32,
     pub damage: u32,
     pub speed: u32,
+    pub mana: u32,
 }
 
 impl Default for PlayerStatus {
@@ -23,6 +24,7 @@ impl Default for PlayerStatus {
             health: 100,
             damage: 10,
             speed: 100,
+            mana: 100,
         }
     }
 }

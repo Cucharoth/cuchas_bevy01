@@ -2,9 +2,11 @@ use super::components::*;
 use super::enemy::*;
 use super::player::*;
 use super::resources::*;
+use super::turns::TurnsPlugin;
 use crate::components::Player;
 use crate::fight::components::Enemy;
 use crate::prelude::*;
+use crate::systems::game::fight::turns::resources::*;
 use bevy::audio::*;
 use bevy::transform;
 use bevy::window::PrimaryWindow;
@@ -14,7 +16,8 @@ pub struct FightPlugin;
 impl Plugin for FightPlugin {
     fn build(&self, app: &mut App) {
         app.add_state::<FightState>()
-            .add_plugins((PlayerPlugin, EnemyPlugin))
+            .init_resource::<PlayerActiveLastTurn>()
+            .add_plugins((PlayerPlugin, EnemyPlugin, TurnsPlugin))
             .add_systems(OnEnter(InGameState::Fight), setup)
             .add_systems(
                 Update,
@@ -136,6 +139,7 @@ fn intro_timer_check(
     enemy_query: Query<&Enemy>,
     intro_timer: Res<IntroTime>,
     mut next_fight_state: ResMut<NextState<FightState>>,
+    mut player_active_last_turn: ResMut<PlayerActiveLastTurn>
 ) {
     if intro_timer.timer.finished() {
         commands.remove_resource::<IntroTime>();
@@ -150,9 +154,11 @@ fn intro_timer_check(
         }
         if player_starts {
             next_fight_state.set(FightState::PlayerTurn);
+            player_active_last_turn.0 = true;
             println!("PLAYER TURN")
         } else {
             next_fight_state.set(FightState::EnemyTurn);
+            player_active_last_turn.0 = false;
             println!("ENEMY TURN")
         }
     }
