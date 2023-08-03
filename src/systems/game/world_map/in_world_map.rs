@@ -1,5 +1,6 @@
 use crate::components::*;
 use crate::prelude::*;
+use bevy::audio::*;
 use bevy::audio::{self, PlaybackMode};
 use bevy::render::camera::ScalingMode;
 use bevy::window::PrimaryWindow;
@@ -167,7 +168,7 @@ fn play_map_music(mut commands: Commands, asset_server: Res<AssetServer>) {
             source: theme,
             settings: PlaybackSettings {
                 mode: PlaybackMode::Loop,
-                //volume: Volume::Relative(1.0),
+                volume: Volume::Relative(VolumeLevel::new(0.6)),
                 ..Default::default()
             },
         },
@@ -193,7 +194,7 @@ fn volume_in_pause(audio_query: Query<&AudioSink, With<WorldMapTheme>>) {
 
 fn volume_in_running(audio_query: Query<&AudioSink, With<WorldMapTheme>>) {
     if let Ok(audio_control) = audio_query.get_single() {
-        audio_control.set_volume(1.0);
+        audio_control.set_volume(0.6);
     }
 }
 

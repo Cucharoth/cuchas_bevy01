@@ -23,3 +23,12 @@ pub struct FightStatusMP;
 
 #[derive(Component)]
 pub struct FightEnemyHP;
+
+#[derive(Component)]
+pub struct SkillListNode;
+
+#[derive(Component)]
+pub struct PlayerButtonsNode;
+
+#[derive(Component)]
+pub struct StatusUI;

@@ -171,7 +171,7 @@ fn play_fight_music(mut commands: Commands, asset_server: Res<AssetServer>) {
             source: fight_theme,
             settings: PlaybackSettings {
                 mode: PlaybackMode::Loop,
-                //volume: Volume::Relative(1.0),
+                volume: Volume::Relative(VolumeLevel::new(0.6)),
                 ..Default::default()
             },
         },
