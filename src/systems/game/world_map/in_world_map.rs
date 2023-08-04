@@ -34,8 +34,8 @@ impl Plugin for WorldMapPlugin {
             )
             //audio handle
             .add_systems(
-                OnEnter(AppState::Game),
-                play_map_music.run_if(in_state(InGameState::WorldMap)),
+                OnEnter(InGameState::WorldMap),
+                play_map_music,
             )
             .add_systems(
                 OnExit(InGameState::WorldMap),
@@ -94,11 +94,12 @@ pub fn spawn_camera(mut commands: Commands, window_query: Query<&Window, With<Pr
 
 pub fn enemy_hit_player(
     mut commands: Commands,
-    mut player_query: Query<(Entity, &Transform), With<Player>>,
+    mut player_query: Query<(Entity, &Transform), With<WorldMapPlayer>>,
     enemy_query: Query<(Entity, &Transform), With<Enemy>>,
     audio_control: Query<&AudioSink, With<WorldMapTheme>>,
     mut next_game_state: ResMut<NextState<GameState>>,
     assest_server: Res<AssetServer>,
+    mut player_status: ResMut<PlayerStatus>
 ) {
     if let Ok((player_entity, player_transform)) = player_query.get_single_mut() {
         for (enemy_entity, enemy_transform) in enemy_query.iter() {
@@ -111,10 +112,11 @@ pub fn enemy_hit_player(
 
             if distance < player_radius + enemy_radius {
                 println!("Collision!, ATTACK");
+                player_status.transform = *player_transform;
                 commands.insert_resource(PlayerEntity {
                     entity: player_entity,
                 });
-                commands.insert_resource(EnemyEntity {
+                commands.insert_resource(EnemyEntityCollisioned {
                     entity: enemy_entity,
                 });
                 let monster_found_audio = assest_server.load("audio/effects/monster_found.wav");

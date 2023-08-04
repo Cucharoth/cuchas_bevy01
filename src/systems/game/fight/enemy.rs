@@ -20,9 +20,9 @@ pub fn spawn_enemy(
     let window = window_query.get_single().unwrap();
 
     let enemy = Enemy {
-        health: 100,
-        damage: 10,
-        speed: 80,
+        health: 100.,
+        damage: 10.,
+        speed: 80.,
     };
     println!("{:?}", &enemy);
     commands.spawn((
@@ -44,6 +44,7 @@ pub fn spawn_enemy(
             direction: Vec2::new(-1.0, 0.0).normalize(),
             speed: 900.0,
         },
+        FightEnemy
     ));
 }
 

@@ -16,7 +16,7 @@ pub fn create_fight_ui(
     mut enemy_q: Query<&Enemy, With<Enemy>>,
 ) {
     commands
-        .spawn(NodeBundle {
+        .spawn((NodeBundle {
             style: Style {
                 align_items: AlignItems::End,
                 //justify_content: JustifyContent::Start,
@@ -27,7 +27,9 @@ pub fn create_fight_ui(
             },
             visibility: Visibility::Hidden,
             ..Default::default()
-        })
+        },
+        FightNodeRoot
+    ))
         .with_children(|parent| {
             create_buttons_node(parent, &asset_server, &mut input_mapping);
             create_enemy_status_node(parent, &asset_server, enemy_q);

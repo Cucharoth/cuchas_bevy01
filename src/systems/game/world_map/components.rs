@@ -11,3 +11,11 @@ pub struct Enemy {
 
 #[derive(Component)]
 pub struct WorldMapTheme;
+
+#[derive(Component)]
+pub struct WorldMapPlayer;
+
+#[derive(Component)]
+pub struct WorldMapEnemy;
+
+

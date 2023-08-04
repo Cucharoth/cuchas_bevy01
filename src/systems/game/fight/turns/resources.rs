@@ -19,3 +19,12 @@ impl Default for PlayerActiveLastTurn {
         Self(true)
     }
 }
+
+#[derive(Resource)]
+pub struct PlayerIsDefending(pub bool);
+
+impl Default for PlayerIsDefending {
+    fn default() -> Self {
+        Self(false)
+    }
+}

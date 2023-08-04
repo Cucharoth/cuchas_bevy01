@@ -1,3 +1,4 @@
+use crate::prelude::InGameState;
 use crate::systems::ui::main_menu::systems::components::*;
 use crate::systems::ui::main_menu::systems::style::*;
 use crate::AppState;
@@ -78,6 +79,7 @@ pub fn interact_with_play_button(
     mut commands: Commands,
     button_interaction_query: Query<Entity, With<MainMenuPlayText>>,
     mut events: EventReader<NavEvent>,
+    mut next_ingame_state: ResMut<NextState<InGameState>>,
     mut next_app_state: ResMut<NextState<AppState>>,
     button_in_audio: Res<ButtonInAudio>
 ) {
@@ -86,6 +88,7 @@ pub fn interact_with_play_button(
             if event.is_activated(button_entity) {
                 plays_button_in_audio(&mut commands, &button_in_audio);
                 next_app_state.set(AppState::Game);
+                next_ingame_state.set(InGameState::WorldMap);
             }
         }
     }

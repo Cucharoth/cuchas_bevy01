@@ -34,6 +34,7 @@ pub enum GameState {
 #[derive(States, Debug, Clone, Copy, Eq, PartialEq, Hash, Default)]
 pub enum InGameState {
     #[default]
+    StandBy,
     WorldMap,
     Fight,
 }

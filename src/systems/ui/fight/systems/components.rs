@@ -1,6 +1,9 @@
 use bevy::prelude::*;
 
 #[derive(Component)]
+pub struct FightNodeRoot;
+
+#[derive(Component)]
 pub struct FightAttackButton;
 
 #[derive(Component)]

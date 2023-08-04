@@ -47,6 +47,8 @@ impl Plugin for FightUIPlugin {
                 (
                     interact_with_attack_button,
                     interact_with_skill_button.after(NavRequestSystem),
+                    interact_with_defend_button,
+                    interact_with_escape_button,
                     back_from_skill_list,
                     re_focus_button_handler.after(NavRequestSystem),
                     button_system
@@ -68,7 +70,9 @@ impl Plugin for FightUIPlugin {
                 (show_player_ui)
                     .run_if(in_state(InGameState::Fight))
                     .run_if(in_state(AppState::Game)),
-            );
+            )
+            // exit fight
+            .add_systems(OnExit(InGameState::Fight), despawn_fight_state.run_if(in_state(AppState::Game)));
         //damage happening
         /* .add_systems(
             Update,

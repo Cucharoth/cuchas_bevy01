@@ -1,4 +1,4 @@
-use super::resources::*;
+use super::{resources::*, components::FightPlayer};
 use super::components::Movement;
 use crate::prelude::{components::Player, *};
 use bevy::window::PrimaryWindow;
@@ -8,7 +8,8 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(InGameState::Fight), spawn_player);
+        app.add_systems(OnEnter(InGameState::Fight), spawn_player)
+        .add_systems(OnExit(InGameState::Fight), despawn_player);
     }
 }
 
@@ -47,9 +48,18 @@ pub fn spawn_player(
         Movement{ 
             direction: Vec2::new(1.0, 0.0).normalize(),
             speed: 900.0
-        }
+        },
+        FightPlayer
     ));
     println!("{:?}", player_status);
+}
+
+fn despawn_player(
+    mut commands: Commands,
+    fight_player_q: Query<Entity, With<FightPlayer>>
+) {
+    let fight_player_entity = fight_player_q.get_single().unwrap();
+    commands.entity(fight_player_entity).despawn();
 }
 
 pub fn change_player_sprite(

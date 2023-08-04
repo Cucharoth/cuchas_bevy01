@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 #[derive(Resource)]
-pub struct EnemyEntity {
+pub struct EnemyEntityCollisioned {
     pub(crate) entity: Entity,
 }
 
@@ -12,19 +12,21 @@ pub struct PlayerEntity {
 
 #[derive(Resource, Debug)]
 pub struct PlayerStatus {
-    pub health: u32,
-    pub damage: u32,
-    pub speed: u32,
-    pub mana: u32,
+    pub health: f32,
+    pub damage: f32,
+    pub speed: f32,
+    pub mana: f32,
+    pub transform: Transform
 }
 
 impl Default for PlayerStatus {
     fn default() -> Self {
         Self {
-            health: 100,
-            damage: 10,
-            speed: 100,
-            mana: 100,
+            health: 100.0,
+            damage: 10.0,
+            speed: 100.0,
+            mana: 100.0,
+            transform: Transform::default()
         }
     }
 }

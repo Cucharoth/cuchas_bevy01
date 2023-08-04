@@ -84,7 +84,7 @@ pub fn intro_timer(
 
 pub fn flip_sprites(
     mut commands: Commands,
-    mut player_query: Query<&mut Sprite, With<Player>>,
+    mut player_query: Query<&mut Sprite, With<FightPlayer>>,
     half_intro_time: Option<Res<HalfIntroTime>>,
 ) {
     if let Ok(mut player_sprite) = player_query.get_single_mut() {
@@ -100,7 +100,7 @@ pub fn flip_sprites(
 
 fn move_enemy_sprite(
     mut commands: Commands,
-    mut enemy_transform_query: Query<(&mut Transform, &Movement), With<Enemy>>,
+    mut enemy_transform_query: Query<(&mut Transform, &Movement), With<FightEnemy>>,
     window_query: Query<&Window, With<PrimaryWindow>>,
     intro_timer: Res<IntroTime>,
     time: Res<Time>,
@@ -119,7 +119,7 @@ fn move_enemy_sprite(
 }
 
 fn move_player_sprite(
-    mut player_transform_query: Query<(&mut Transform, &Movement), With<Player>>,
+    mut player_transform_query: Query<(&mut Transform, &Movement), With<FightPlayer>>,
     window_query: Query<&Window, With<PrimaryWindow>>,
     time: Res<Time>,
 ) {
@@ -135,8 +135,8 @@ fn move_player_sprite(
 
 fn intro_timer_check(
     mut commands: Commands,
-    player_query: Query<&Player>,
-    enemy_query: Query<&Enemy>,
+    player_query: Query<&Player, With<FightPlayer>>,
+    enemy_query: Query<&Enemy, With<FightEnemy>>,
     intro_timer: Res<IntroTime>,
     mut next_fight_state: ResMut<NextState<FightState>>,
     mut player_active_last_turn: ResMut<PlayerActiveLastTurn>
@@ -197,7 +197,7 @@ fn volume_in_pause(battle_theme_query: Query<&AudioSink, With<BattleTheme>>) {
 
 fn volume_in_running(battle_theme_query: Query<&AudioSink, With<BattleTheme>>) {
     if let Ok(battle_theme) = battle_theme_query.get_single() {
-        battle_theme.set_volume(1.0);
+        battle_theme.set_volume(0.6);
     }
 }
 

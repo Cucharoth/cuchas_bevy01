@@ -3,6 +3,7 @@ pub mod events;
 pub mod resources;
 pub mod systems;
 
+use crate::systems::game::fight::turns::resources::*;
 use crate::{systems::game::fight::turns::systems::*, AppState};
 use bevy::prelude::*;
 
@@ -12,7 +13,8 @@ pub struct TurnsPlugin;
 impl Plugin for TurnsPlugin {
     fn build(&self, app: &mut App) {
         // damage happening
-        app.add_systems(
+        app.init_resource::<PlayerIsDefending>()
+        .add_systems(
             OnEnter(FightState::DamageHappening),
             (damage_happening_timer).run_if(in_state(AppState::Game)),
         )

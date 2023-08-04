@@ -14,7 +14,7 @@ pub fn player_attack(
     let damage_amount = player_status.damage;
     if attack_is_crit {
         println!("CRIT!");
-        event_writter.send(PlayerDamageEvent(damage_amount * 2));
+        event_writter.send(PlayerDamageEvent(damage_amount * 2.));
     } else {
         event_writter.send(PlayerDamageEvent(damage_amount));
     }
@@ -67,20 +67,29 @@ pub fn damage_happening_timer_check(
 pub fn enemy_turn(
     mut next_fight_state: ResMut<NextState<FightState>>,
     mut event_writter: EventWriter<EnemyDamageEvent>,
-    mut player_active_last_turn: ResMut<PlayerActiveLastTurn>
+    mut player_active_last_turn: ResMut<PlayerActiveLastTurn>,
 ) {
     println!("ENEMY DOES SOMETHING!");
     player_active_last_turn.0 = false;
     next_fight_state.set(FightState::DamageHappening);
-    event_writter.send(EnemyDamageEvent(20));
+    event_writter.send(EnemyDamageEvent(20.0));
 }
 
 pub fn enemy_does_damage_check(
     mut player_status: ResMut<PlayerStatus>,
     mut event_reader: EventReader<EnemyDamageEvent>,
+    player_defending: Res<PlayerIsDefending>,
 ) {
     for event in event_reader.iter() {
-        println!("Enemy does {} damage to the player", event.0);
-        player_status.health -= event.0;
+        let player_is_defending = player_defending.0;
+        let mut enemy_damage = event.0;
+        if player_is_defending {
+            enemy_damage -= enemy_damage * 0.25;
+            println!("Enemy does {} damage to the player", enemy_damage);
+            player_status.health -= enemy_damage;
+        } else {
+            println!("Enemy does {} damage to the player", enemy_damage);
+            player_status.health -= enemy_damage;
+        }
     }
 }

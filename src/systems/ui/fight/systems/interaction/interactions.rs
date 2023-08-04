@@ -1,5 +1,7 @@
+use crate::prelude::InGameState;
 use crate::prelude::fight::components::Enemy;
 use crate::prelude::fight::in_fight::FightState;
+use crate::prelude::world_map::enemy::spawn_single_enemy;
 use crate::systems::game::fight::turns::events::*;
 use crate::systems::game::fight::turns::resources::*;
 use crate::systems::game::fight::turns::systems::*;
@@ -13,6 +15,7 @@ use bevy::audio;
 use bevy::audio::PlaybackMode;
 use bevy::ecs::event;
 use bevy::prelude::*;
+use bevy::window::PrimaryWindow;
 use bevy_ui_navigation::prelude::NavRequest;
 use bevy_ui_navigation::prelude::{FocusState, Focusable, NavEvent};
 
@@ -131,6 +134,58 @@ pub fn interact_with_skill_button(
             }
         }
     }
+}
+
+pub fn interact_with_defend_button(
+    mut commands: Commands,
+    mut events: EventReader<NavEvent>,
+    mut defend_button_q: Query<(Entity, &mut BackgroundColor), With<FightDefButton>>,
+    button_in_audio: Res<ButtonInAudio>,
+    mut next_fight_state: ResMut<NextState<FightState>>,
+    mut player_defending: ResMut<PlayerIsDefending>
+) {
+    if let Ok((defend_button_entity, mut background_color)) = defend_button_q.get_single_mut() {
+        for event in events.iter() {
+            if event.is_activated(defend_button_entity) {
+                plays_button_in_audio(&mut commands, &button_in_audio);
+                player_defending.0 = true;
+                *background_color = FIGHT_UI_ACTIONED_BUTTON_COLOR.into();
+                println!("Player is defending");
+                next_fight_state.set(FightState::DamageHappening);
+            }
+        }
+    }
+}
+
+pub fn interact_with_escape_button(
+    mut commands: Commands,
+    mut events: EventReader<NavEvent>,
+    mut escape_button_q: Query<(Entity, &mut BackgroundColor), With<FightEscapeButton>>,
+    button_out_audio: Res<ButtonOutAudio>,
+    mut next_fight_state: ResMut<NextState<FightState>>,
+    mut next_ingame_state: ResMut<NextState<InGameState>>,
+    window_query: Query<&Window, With<PrimaryWindow>>,
+    asset_server: Res<AssetServer>,
+    player_status: Res<PlayerStatus>
+) {
+    if let Ok((escape_button_entity, mut background_color)) = escape_button_q.get_single_mut() {
+        for event in events.iter() {
+            if event.is_activated(escape_button_entity) {
+                plays_button_out_audio(&mut commands, &button_out_audio);
+                *background_color = FIGHT_UI_ACTIONED_BUTTON_COLOR.into();
+                next_ingame_state.set(InGameState::WorldMap);
+                spawn_single_enemy(&mut commands, &window_query, &asset_server, &player_status);
+            }
+        }
+    }
+}
+
+pub fn despawn_fight_state(
+    mut commands: Commands,
+    fight_node_root_q: Query<Entity, With<FightNodeRoot>>,
+){
+    let fight_node_root_entity = fight_node_root_q.get_single().unwrap();
+    commands.entity(fight_node_root_entity).despawn_recursive();
 }
 
 fn blocks_main_ui(

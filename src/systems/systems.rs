@@ -45,7 +45,7 @@ pub fn transition_to_menu_state(
             //commands.insert_resource(NextState(Some(AppState::MainMenu)));
             next_app_state.set(AppState::MainMenu);
             next_game_state.set(GameState::Paused);
-            next_ingame_state.set(InGameState::WorldMap);
+            next_ingame_state.set(InGameState::StandBy);
             println!("IN MAIN MENU")
         }
     }

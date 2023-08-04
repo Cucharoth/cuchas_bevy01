@@ -1,24 +1,43 @@
 use crate::components::Player;
 use crate::prelude::*;
+use crate::systems::game::resources::*;
+use crate::systems::game::world_map::components::*;
 use bevy::window::PrimaryWindow;
 
 pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(AppState::Game), spawn_player)
-            .add_systems(
-                Update,
-                (
-                    character_movement.before(confine_player_movement),
-                    confine_player_movement,
-                )
-                    .run_if(in_state(AppState::Game))
-                    .run_if(in_state(GameState::Running))
-                    .run_if(in_state(InGameState::WorldMap)),
+        // from main menu
+        app.add_systems(
+            OnTransition {
+                from: InGameState::StandBy,
+                to: InGameState::WorldMap,
+            },
+            spawn_player,
+        )
+        // from fight
+        .add_systems(
+            OnTransition {
+                from: InGameState::Fight,
+                to: InGameState::WorldMap,
+            },
+            restore_player_visibility,
+        )
+        // while on map
+        .add_systems(
+            Update,
+            (
+                character_movement.before(confine_player_movement),
+                confine_player_movement,
             )
-            .add_systems(OnExit(AppState::Game), despawn_player)
-            .add_systems(OnExit(InGameState::WorldMap), despawn_player);
+                .run_if(in_state(AppState::Game))
+                .run_if(in_state(GameState::Running))
+                .run_if(in_state(InGameState::WorldMap)),
+        )
+        // leaving map
+        .add_systems(OnExit(AppState::Game), despawn_player)
+        .add_systems(OnExit(InGameState::WorldMap), hide_player_visibility);
     }
 }
 
@@ -26,6 +45,7 @@ pub fn spawn_player(
     mut commands: Commands,
     window_query: Query<&Window, With<PrimaryWindow>>,
     asset_server: Res<AssetServer>,
+    mut player_status: ResMut<PlayerStatus>
 ) {
     let window = window_query.get_single().unwrap();
 
@@ -42,12 +62,15 @@ pub fn spawn_player(
             ..default()
         },
         Player {
-            damage: 10,
+            damage: 10.,
             mov_speed: 500.0,
-            speed: 100,
+            speed: 100.,
             ..Default::default()
         },
+        WorldMapPlayer,
     ));
+    player_status.transform = Transform::from_xyz(window.width() / 2.0, window.height() / 2.0, 0.0);
+
 }
 
 fn despawn_player(mut commands: Commands, player_query: Query<Entity, With<Player>>) {
@@ -109,5 +132,17 @@ pub fn confine_player_movement(
         }
 
         player_transform.translation = translation;
+    }
+}
+
+fn hide_player_visibility(mut world_map_player_q: Query<&mut Visibility, With<WorldMapPlayer>>) {
+    if let Ok(mut world_map_player_visibility) = world_map_player_q.get_single_mut() {
+        *world_map_player_visibility = Visibility::Hidden;
+    }
+}
+
+fn restore_player_visibility(mut world_map_player_q: Query<&mut Visibility, With<WorldMapPlayer>>) {
+    if let Ok(mut world_map_player_visibility) = world_map_player_q.get_single_mut() {
+        *world_map_player_visibility = Visibility::Visible;
     }
 }
