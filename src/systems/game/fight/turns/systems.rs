@@ -1,9 +1,10 @@
-use crate::prelude::fight::components::Enemy;
+use crate::prelude::fight::components::*;
 use crate::prelude::fight::in_fight::FightState;
 use crate::systems::game::fight::turns::events::*;
 use crate::systems::game::fight::turns::resources::*;
 use crate::systems::game::resources::PlayerStatus;
 use bevy::prelude::*;
+use bevy::reflect::erased_serde::__private::serde::__private::de;
 use rand::prelude::*;
 
 pub fn player_attack(
@@ -14,9 +15,17 @@ pub fn player_attack(
     let damage_amount = player_status.damage;
     if attack_is_crit {
         println!("CRIT!");
-        event_writter.send(PlayerDamageEvent(damage_amount * 2.));
+        event_writter.send(PlayerDamageEvent {
+            damage: damage_amount * 2.,
+            debuff: None,
+            debuff_duration: None
+        })
     } else {
-        event_writter.send(PlayerDamageEvent(damage_amount));
+        event_writter.send(PlayerDamageEvent {
+            damage: damage_amount,
+            debuff: None,
+            debuff_duration: None
+        });
     }
 }
 
@@ -26,8 +35,27 @@ pub fn player_does_damage_check(
 ) {
     for event in event_reader.iter() {
         for mut enemy in enemy_query.iter_mut() {
-            println!("Player does {} damage to the enemy!", event.0);
-            enemy.health -= event.0;
+            let player_damage = event.damage;
+            println!("Player does {:?} damage to the enemy!", player_damage);
+            enemy.health -= player_damage;
+            if let Some(debuff) = event.debuff.clone() {
+                match debuff {
+                    Debuff::Freezing => {
+                        let is_applied = thread_rng().gen_bool(0.6);
+                        if is_applied {
+                            println!("Player applies {:?}", debuff);
+                            enemy.debuffs.insert(debuff, (event.debuff_duration.unwrap(), player_damage));
+                        } else {
+                            println!("Enemy resisted the Freezing!")
+                        }
+                    }
+                    Debuff::Burning => {
+                        println!("Player applies {:?}", debuff);
+                        enemy.debuffs.insert(debuff, (event.debuff_duration.unwrap(), player_damage));
+                    }
+                    Debuff::Blindness => { enemy.debuffs.insert(debuff, (event.debuff_duration.unwrap(), player_damage)); }
+                }
+            }
         }
     }
 }
@@ -65,14 +93,50 @@ pub fn damage_happening_timer_check(
 }
 
 pub fn enemy_turn(
+    mut enemy_q: Query<&mut Enemy, With<FightEnemy>>,
     mut next_fight_state: ResMut<NextState<FightState>>,
     mut event_writter: EventWriter<EnemyDamageEvent>,
     mut player_active_last_turn: ResMut<PlayerActiveLastTurn>,
-) {
-    println!("ENEMY DOES SOMETHING!");
-    player_active_last_turn.0 = false;
-    next_fight_state.set(FightState::DamageHappening);
-    event_writter.send(EnemyDamageEvent(20.0));
+) { 
+    if let Ok(mut enemy) = enemy_q.get_single_mut() {
+        let mut enemy_is_frozen = false;
+        let mut enemy_is_blind = false;
+
+        let enemy_debuff_clone = enemy.debuffs.clone();
+        for (debuff, (duration, player_damage)) in enemy_debuff_clone.iter() {
+            //debuff handle
+            match debuff {
+                Debuff::Freezing => { enemy_is_frozen = true;},
+                Debuff::Burning => { enemy.health -= player_damage * 0.20},
+                Debuff::Blindness => { enemy_is_blind = true;},
+
+            }
+            if *duration <= 1. {
+                enemy.debuffs.remove(debuff);
+            } else {
+                if let Some((enemy_debuff_duration, _player_damage)) = enemy.debuffs.get_mut(debuff) {
+                    *enemy_debuff_duration = -1.;
+                }
+            }
+        }
+
+        println!("ENEMY DOES SOMETHING!");
+        player_active_last_turn.0 = false;
+        let enemy_damage = 20.;
+        // frozen
+        if enemy_is_frozen {
+            println!("Enemy is Frozen!");       
+            next_fight_state.set(FightState::DamageHappening);
+        } else if enemy_is_blind {
+            println!("Enemy CAN'T C");
+            next_fight_state.set(FightState::DamageHappening);
+        } else {
+            event_writter.send(EnemyDamageEvent(enemy_damage));
+            next_fight_state.set(FightState::DamageHappening);
+        }
+    }
+
+    
 }
 
 pub fn enemy_does_damage_check(

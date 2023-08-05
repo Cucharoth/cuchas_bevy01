@@ -1,6 +1,6 @@
 use super::components::*;
 use crate::prelude::*;
-use bevy::window::PrimaryWindow;
+use bevy::{window::PrimaryWindow, utils::HashMap};
 
 pub struct EnemyPlugin;
 
@@ -23,6 +23,7 @@ pub fn spawn_enemy(
         health: 100.,
         damage: 10.,
         speed: 80.,
+        debuffs: HashMap::new()
     };
     println!("{:?}", &enemy);
     commands.spawn((

@@ -1,4 +1,4 @@
-use crate::prelude::fight::components::Enemy;
+use crate::prelude::fight::components::*;
 use crate::systems::ui::fight::systems::components::*;
 use crate::systems::ui::fight::systems::style::*;
 use bevy::prelude::*;
@@ -289,14 +289,20 @@ fn create_node_skill_1(parent: &mut ChildBuilder, asset_server: &Res<AssetServer
                 background_color: FIGHT_UI_BUTTON_COLOR.into(),
                 ..Default::default()
             },
-            //FightDefButton,
+            PlayerSkill {
+                name: "FrostBolt".to_string(),
+                damage: 20.,
+                mana_cost: 20.,
+                effect: Some(Debuff::Freezing),
+                effect_duration: Some(1.)
+            },
             Focusable::default(),
         ))
         .with_children(|parent| {
             parent.spawn(TextBundle {
                 text: Text {
                     sections: vec![TextSection::new(
-                        "Skill1",
+                        "FrostBolt",
                         TextStyle {
                             font: asset_server.load("fonts/FiraSans-Bold.ttf"),
                             font_size: FIGHT_UI_TEXT_SIZE,
@@ -327,14 +333,20 @@ fn create_node_skill_2(parent: &mut ChildBuilder, asset_server: &Res<AssetServer
                 background_color: FIGHT_UI_BUTTON_COLOR.into(),
                 ..Default::default()
             },
-            //FightDefButton,
+            PlayerSkill {
+                name: "FireBolt".to_string(),
+                damage: 20.,
+                mana_cost: 20.,
+                effect: Some(Debuff::Burning),
+                effect_duration: Some(2.)
+            },
             Focusable::default(),
         ))
         .with_children(|parent| {
             parent.spawn(TextBundle {
                 text: Text {
                     sections: vec![TextSection::new(
-                        "skill2",
+                        "FireBolt",
                         TextStyle {
                             font: asset_server.load("fonts/FiraSans-Bold.ttf"),
                             font_size: FIGHT_UI_TEXT_SIZE,
@@ -365,14 +377,20 @@ fn create_node_skill_3(parent: &mut ChildBuilder, asset_server: &Res<AssetServer
                 background_color: FIGHT_UI_BUTTON_COLOR.into(),
                 ..Default::default()
             },
-            //FightDefButton,
+            PlayerSkill {
+                name: "ShadowBolt".to_string(),
+                damage: 30.,
+                mana_cost: 20.,
+                effect: None,
+                effect_duration: None
+            },
             Focusable::default(),
         ))
         .with_children(|parent| {
             parent.spawn(TextBundle {
                 text: Text {
                     sections: vec![TextSection::new(
-                        "skill3",
+                        "ShadowBolt",
                         TextStyle {
                             font: asset_server.load("fonts/FiraSans-Bold.ttf"),
                             font_size: FIGHT_UI_TEXT_SIZE,
@@ -403,14 +421,20 @@ fn create_node_skill_4(parent: &mut ChildBuilder, asset_server: &Res<AssetServer
                 background_color: FIGHT_UI_BUTTON_COLOR.into(),
                 ..Default::default()
             },
-            //FightDefButton,
+            PlayerSkill {
+                name: "WindFury".to_string(),
+                damage: 15.,
+                mana_cost: 20.,
+                effect: Some(Debuff::Blindness),
+                effect_duration: Some(1.)
+            },
             Focusable::default(),
         ))
         .with_children(|parent| {
             parent.spawn(TextBundle {
                 text: Text {
                     sections: vec![TextSection::new(
-                        "skill4",
+                        "WindFury",
                         TextStyle {
                             font: asset_server.load("fonts/FiraSans-Bold.ttf"),
                             font_size: FIGHT_UI_TEXT_SIZE,

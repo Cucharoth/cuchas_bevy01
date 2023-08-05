@@ -16,7 +16,8 @@ pub struct PlayerStatus {
     pub damage: f32,
     pub speed: f32,
     pub mana: f32,
-    pub transform: Transform
+    pub transform: Transform,
+    pub bad_luck_protection: f64 // rng uses f64
 }
 
 impl Default for PlayerStatus {
@@ -26,7 +27,8 @@ impl Default for PlayerStatus {
             damage: 10.0,
             speed: 100.0,
             mana: 100.0,
-            transform: Transform::default()
+            transform: Transform::default(),
+            bad_luck_protection: 0.
         }
     }
 }

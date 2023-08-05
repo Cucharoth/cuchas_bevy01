@@ -182,7 +182,7 @@ pub fn spawn_single_enemy(
     commands: &mut Commands,
     window_query: &Query<&Window, With<PrimaryWindow>>,
     asset_server: &Res<AssetServer>,
-    player_status: &Res<PlayerStatus>,
+    player_status: &ResMut<PlayerStatus>,
 ) {
     let window = window_query.get_single().unwrap();
     let mut enemy_transform: Transform;

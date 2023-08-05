@@ -11,7 +11,7 @@ use crate::systems::ui::fight::systems::interaction::interactions::*;
 use crate::systems::ui::fight::systems::layout::*;
 use crate::AppState;
 
-use self::events::ReFocusButtonEvent;
+use self::events::{ReFocusButtonEvent, HidePlayerSkillList};
 pub struct FightUIPlugin;
 
 impl Plugin for FightUIPlugin {
@@ -19,6 +19,7 @@ impl Plugin for FightUIPlugin {
         app.add_event::<PlayerDamageEvent>()
             .add_event::<EnemyDamageEvent>()
             .add_event::<ReFocusButtonEvent>()
+            .add_event::<HidePlayerSkillList>()
             .add_systems(OnEnter(FightState::Intro), (create_fight_ui))
             .add_systems(
                 Update,
@@ -49,6 +50,7 @@ impl Plugin for FightUIPlugin {
                     interact_with_skill_button.after(NavRequestSystem),
                     interact_with_defend_button,
                     interact_with_escape_button,
+                    interact_with_skill_list_button,
                     back_from_skill_list,
                     re_focus_button_handler.after(NavRequestSystem),
                     button_system
@@ -71,6 +73,10 @@ impl Plugin for FightUIPlugin {
                     .run_if(in_state(InGameState::Fight))
                     .run_if(in_state(AppState::Game)),
             )
+            .add_systems(OnTransition {
+                from: FightState::PlayerTurn,
+                to: FightState::DamageHappening
+            }, hide_psl_event_handler)
             // exit fight
             .add_systems(OnExit(InGameState::Fight), despawn_fight_state.run_if(in_state(AppState::Game)));
         //damage happening
