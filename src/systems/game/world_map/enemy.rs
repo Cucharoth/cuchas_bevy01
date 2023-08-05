@@ -67,7 +67,7 @@ pub fn spawn_enemy(
         loop {
             random_x = random::<f32>() * window.width();
             random_y = random::<f32>() * window.height();
-            enemy_transform = Transform::from_xyz(random_x, random_y, 0.0);
+            enemy_transform = Transform::from_xyz(random_x, random_y, 900.0);
 
             let distance = player_status
                 .transform
@@ -192,7 +192,7 @@ pub fn spawn_single_enemy(
     loop {
         random_x = random::<f32>() * window.width();
         random_y = random::<f32>() * window.height();
-        enemy_transform = Transform::from_xyz(random_x, random_y, 0.0);
+        enemy_transform = Transform::from_xyz(random_x, random_y, 900.0);
 
         let distance = player_status
             .transform

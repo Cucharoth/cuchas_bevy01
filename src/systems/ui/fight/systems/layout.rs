@@ -43,7 +43,11 @@ fn create_enemy_status_node(
 ) {
     parent
         .spawn((
-            NodeBundle {
+            ImageBundle {
+                image: UiImage {
+                    texture: asset_server.load("UI/tile01.png"),
+                    ..Default::default()
+                },
                 style: Style {
                     position_type: PositionType::Absolute,
                     flex_direction: FlexDirection::Column,
@@ -64,7 +68,7 @@ fn create_enemy_status_node(
                     ..Default::default()
                 },
                 visibility: Visibility::Hidden,
-                background_color: FIGHT_UI_BUTTON_COLOR.into(),
+                background_color: FIGHT_UI_NODE_BUTTONS_COLOR.into(),
                 ..Default::default()
             },
             StatusUI,
@@ -115,7 +119,11 @@ fn create_buttons_node(
     input_mapping.focus_follows_mouse = true;
     parent
         .spawn((
-            NodeBundle {
+            ImageBundle {
+                image: UiImage {
+                    texture: asset_server.load("UI/tile01.png"),
+                    ..Default::default()
+                },
                 style: Style {
                     align_items: AlignItems::Center,
                     justify_content: JustifyContent::Center,
@@ -237,7 +245,11 @@ fn create_skill_button(
 fn create_skill_list_node(parent: &mut ChildBuilder, asset_server: &Res<AssetServer>) {
     parent
         .spawn((
-            NodeBundle {
+            ImageBundle {
+                image: UiImage {
+                    texture: asset_server.load("UI/tile01.png"),
+                    ..Default::default()
+                },
                 style: Style {
                     flex_direction: FlexDirection::Column,
                     bottom: Val::Percent(-10.),

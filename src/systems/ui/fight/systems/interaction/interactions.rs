@@ -1,5 +1,4 @@
-use crate::prelude::fight::components::Enemy;
-use crate::prelude::fight::components::PlayerSkill;
+use crate::prelude::fight::components::*;
 use crate::prelude::fight::in_fight::FightState;
 use crate::prelude::world_map::enemy::spawn_single_enemy;
 use crate::prelude::InGameState;
@@ -55,28 +54,39 @@ pub fn update_hp_enemy_node(
 ) {
     if let Ok(mut enemy_node_text) = enemy_node_q.get_single_mut() {
         for enemy in enemy_q.iter_mut() {
-            let text_input = format!("HP: \t {}", enemy.health);
+            let displayed_hp: f32 = if enemy.health < 0. { 0. } else { enemy.health };
+            let text_input = format!("HP: \t {}", displayed_hp);
             enemy_node_text.sections[0].value = text_input;
         }
     }
 }
 
-pub fn update_hp_status_node(
+pub fn update_hp_player_status_node(
     mut node_status_hp_query: Query<&mut Text, With<FightStatusHP>>,
     player_status: Res<PlayerStatus>,
 ) {
     if let Ok(mut node_hp_status) = node_status_hp_query.get_single_mut() {
-        let text_input = format!("HP: \t {}", player_status.health);
+        let displayed_hp: f32 = if player_status.health < 0. {
+            0.
+        } else {
+            player_status.health
+        };
+        let text_input = format!("HP: \t {}", displayed_hp);
         node_hp_status.sections[0].value = text_input;
     }
 }
 
-pub fn update_mp_status_node(
+pub fn update_mp_player_status_node(
     mut node_status_mp_query: Query<&mut Text, With<FightStatusMP>>,
     player_status: Res<PlayerStatus>,
 ) {
     if let Ok(mut node_mp_status) = node_status_mp_query.get_single_mut() {
-        let text_input = format!("MP: \t {}", player_status.mana);
+        let displayed_mp: f32 = if player_status.mana < 0. {
+            0.
+        } else {
+            player_status.mana
+        };
+        let text_input = format!("MP: \t {}", displayed_mp);
         node_mp_status.sections[0].value = text_input;
     }
 }
@@ -105,9 +115,14 @@ pub fn interact_with_attack_button(
 
 pub fn interact_with_skill_button(
     mut commands: Commands,
+    mut player_sprite_vis_q: Query<&mut Visibility, (With<FightPlayer>, Without<SaraCast>)>,
+    mut sara_cast_vis_q: Query<&mut Visibility, (With<SaraCast>, Without<SkillListNode>)>,
     mut skill_button_q: Query<(Entity, &mut BackgroundColor), With<FightSkillButton>>,
     mut events: EventReader<NavEvent>,
-    mut player_skill_list_button_q: Query<(&mut Visibility, &mut Children), With<SkillListNode>>,
+    mut player_skill_list_button_q: Query<
+        (&mut Visibility, &mut Children),
+        (With<SkillListNode>, Without<FightPlayer>),
+    >,
     mut focusable_q: Query<&mut Focusable>,
     mut player_buttons_q: Query<&mut Children, (With<PlayerButtonsNode>, Without<SkillListNode>)>,
     mut nav_event_request: EventWriter<NavRequest>,
@@ -118,6 +133,13 @@ pub fn interact_with_skill_button(
             if event.is_activated(button_entity) {
                 plays_button_in_audio(&mut commands, &button_in_audio);
                 *background_color = FIGHT_UI_ACTIONED_BUTTON_COLOR.into();
+                // hide player sprite
+                let mut player_sprite = player_sprite_vis_q.get_single_mut().unwrap();
+                *player_sprite = Visibility::Hidden;
+                // shows cast sprite
+                let mut sara_cast = sara_cast_vis_q.get_single_mut().unwrap();
+                *sara_cast = Visibility::Visible;
+
                 if let Ok((mut visibility_skill_list_button, childrens)) =
                     player_skill_list_button_q.get_single_mut()
                 {
@@ -198,6 +220,8 @@ pub fn interact_with_escape_button(
 }
 
 pub fn interact_with_skill_list_button(
+    mut sara_cast_vis_q: Query<&mut Visibility, (With<SaraCast>, Without<SkillListNode>)>,
+    mut sara_cast_succes_q: Query<&mut Visibility, (With<SaraCastSuccesful>, Without<SaraCast>)>,
     player_skill_list_button_q: Query<&mut Children, With<SkillListNode>>,
     mut nav_event_reader: EventReader<NavEvent>,
     with_player_skill: Query<&mut PlayerSkill>,
@@ -206,29 +230,44 @@ pub fn interact_with_skill_list_button(
     mut dmg_event_writter: EventWriter<PlayerDamageEvent>,
     mut next_fight_state: ResMut<NextState<FightState>>,
     mut re_focus_event_writter: EventWriter<ReFocusButtonEvent>,
-    mut hide_psl_event: EventWriter<HidePlayerSkillList>
+    mut hide_psl_event: EventWriter<HidePlayerSkillList>,
+    mut player_status: ResMut<PlayerStatus>,
 ) {
     if let Ok(skill_buttons) = player_skill_list_button_q.get_single() {
         for event in nav_event_reader.iter() {
             for skill_button_entity in skill_buttons.iter() {
                 if event.is_activated(*skill_button_entity) {
+                    // hide sara cast sprite
+                    let mut sara_cast = sara_cast_vis_q.get_single_mut().unwrap();
+                    *sara_cast = Visibility::Hidden;
+                    // show sara cast succesful
+                    let mut sara_cast_succesful = sara_cast_succes_q.get_single_mut().unwrap();
+                    *sara_cast_succesful = Visibility::Visible;
+
+
                     let player_skill = with_player_skill.get(*skill_button_entity).unwrap();
-                    println!("Player uses {}!", player_skill.name);
+                    if player_status.mana >= player_skill.mana_cost {
+                        println!("Player uses {}!", player_skill.name);
+                        player_status.mana -= player_skill.mana_cost;
+                        dmg_event_writter.send(PlayerDamageEvent {
+                            damage: player_skill.damage,
+                            debuff: player_skill.effect.clone(),
+                            debuff_duration: player_skill.effect_duration,
+                        });
+                        hide_psl_event.send(HidePlayerSkillList {
+                            entity: *skill_button_entity,
+                        });
 
-                    dmg_event_writter.send(PlayerDamageEvent {
-                        damage: player_skill.damage,
-                        debuff: player_skill.effect.clone(),
-                        debuff_duration: player_skill.effect_duration,
-                    });
-                    hide_psl_event.send(HidePlayerSkillList{entity: *skill_button_entity});
+                        unlock_player_buttons(
+                            &mut player_buttons_q,
+                            &mut focusable_q,
+                            &mut re_focus_event_writter,
+                        );
 
-                    unlock_player_buttons(
-                        &mut player_buttons_q,
-                        &mut focusable_q,
-                        &mut re_focus_event_writter,
-                    );
-
-                    next_fight_state.set(FightState::DamageHappening);
+                        next_fight_state.set(FightState::DamageHappening);
+                    } else {
+                        println!("Player mana is too low!");
+                    }
                 }
             }
         }
@@ -238,7 +277,7 @@ pub fn interact_with_skill_list_button(
 pub fn hide_psl_event_handler(
     mut player_skill_list_button_q: Query<&mut Visibility, With<SkillListNode>>,
     focusable_q: Query<&mut Focusable>,
-    mut hide_psl_event_reader: EventReader<HidePlayerSkillList>
+    mut hide_psl_event_reader: EventReader<HidePlayerSkillList>,
 ) {
     for event in hide_psl_event_reader.iter() {
         if let Ok(button_focusable) = focusable_q.get(event.entity) {
@@ -249,7 +288,6 @@ pub fn hide_psl_event_handler(
         *player_skill_list_vis = Visibility::Hidden;
     }
 }
-
 
 pub fn despawn_fight_state(
     mut commands: Commands,
@@ -315,7 +353,9 @@ pub fn show_player_ui(
 pub fn back_from_skill_list(
     mut commands: Commands,
     mut nav_request_event: EventReader<NavRequest>,
-    mut player_skill_list_button_q: Query<(&mut Visibility, &mut Children), With<SkillListNode>>,
+    mut player_sprite_vis_q: Query<&mut Visibility, (With<FightPlayer>, Without<SaraCast>)>,
+    mut sara_cast_vis_q: Query<&mut Visibility, (With<SaraCast>, Without<SkillListNode>)>,
+    mut player_skill_list_button_q: Query<(&mut Visibility, &mut Children), (With<SkillListNode>, Without<FightPlayer>)>,
     mut player_buttons_q: Query<&mut Children, (With<PlayerButtonsNode>, Without<SkillListNode>)>,
     mut focusable_q: Query<&mut Focusable>,
     mut event_writter: EventWriter<ReFocusButtonEvent>,
@@ -325,6 +365,13 @@ pub fn back_from_skill_list(
         if skill_list_visibility == Visibility::Visible {
             for event in nav_request_event.iter() {
                 if *event == NavRequest::Cancel {
+                    // hide cast sprite
+                    let mut sara_cast = sara_cast_vis_q.get_single_mut().unwrap();
+                    *sara_cast = Visibility::Hidden;
+                    // show player sprite
+                    let mut player_sprite = player_sprite_vis_q.get_single_mut().unwrap();
+                    *player_sprite = Visibility::Visible;
+
                     plays_button_out_audio(&mut commands, &button_out_audio);
                     lock_skill_list(&mut player_skill_list_button_q, &mut focusable_q);
                     unlock_player_buttons(
@@ -354,7 +401,7 @@ fn unlock_player_buttons(
 }
 
 fn lock_skill_list(
-    player_skill_list_button_q: &mut Query<(&mut Visibility, &mut Children), With<SkillListNode>>,
+    player_skill_list_button_q: &mut Query<(&mut Visibility, &mut Children), (With<SkillListNode>, Without<FightPlayer>)>,
     focusable_q: &mut Query<&mut Focusable>,
 ) {
     if let Ok((mut skill_list_visibility, childrens)) = player_skill_list_button_q.get_single_mut()
@@ -381,4 +428,34 @@ pub fn show_status_ui(mut status_ui_q: Query<&mut Visibility, With<StatusUI>>) {
     for mut ui_node_visibility in status_ui_q.iter_mut() {
         *ui_node_visibility = Visibility::Visible;
     }
+}
+
+pub fn hide_sara_cast(
+    mut sara_cast_succes_q: Query<&mut Visibility, (With<SaraCastSuccesful>, Without<FightPlayer>)>,
+    mut player_sprite_vis_q: Query<&mut Visibility, (With<FightPlayer>, Without<SaraCastSuccesful>)>
+) {
+    let mut sara_cast_succes = sara_cast_succes_q.get_single_mut().unwrap();
+    *sara_cast_succes = Visibility::Hidden;
+    let mut player_sprite = player_sprite_vis_q.get_single_mut().unwrap();
+    *player_sprite = Visibility::Visible;
+}
+
+pub fn reset_sara_sprites_1(
+    mut sara_dedge_q: Query<&mut Visibility, (With<SaraDedge>, Without<FightPlayer>)>,
+    mut sara_cast_vis_q: Query<&mut Visibility, (With<SaraCast>, Without<SaraDedge>)>,
+) {
+    let mut sara_cast_vis = sara_cast_vis_q.get_single_mut().unwrap();
+    *sara_cast_vis = Visibility::Hidden;
+    let mut sara_dedge = sara_dedge_q.get_single_mut().unwrap();
+    *sara_dedge = Visibility::Hidden;
+}
+
+pub fn reset_sara_sprites_2(
+    mut sara_cast_succes_q: Query<&mut Visibility, (With<SaraCastSuccesful>, Without<FightPlayer>)>,
+    mut player_sprite_vis_q: Query<&mut Visibility, (With<FightPlayer>, Without<SaraCastSuccesful>)>
+) {
+    let mut sara_cast_succes = sara_cast_succes_q.get_single_mut().unwrap();
+    *sara_cast_succes = Visibility::Hidden;
+    let mut player_sprite = player_sprite_vis_q.get_single_mut().unwrap();
+    *player_sprite = Visibility::Visible;
 }

@@ -49,3 +49,15 @@ pub enum Debuff{
     Freezing,
     Blindness
 }
+
+#[derive(Component)]
+pub struct SaraCast;
+
+#[derive(Component)]
+pub struct SaraCastSuccesful;
+
+#[derive(Component)]
+pub struct SaraDedge;
+
+#[derive(Component)]
+pub struct ExtraSprite;

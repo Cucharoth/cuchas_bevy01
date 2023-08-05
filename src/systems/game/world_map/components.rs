@@ -18,4 +18,7 @@ pub struct WorldMapPlayer;
 #[derive(Component)]
 pub struct WorldMapEnemy;
 
+#[derive(Component)]
+pub struct WorldMapBackground;
+
 

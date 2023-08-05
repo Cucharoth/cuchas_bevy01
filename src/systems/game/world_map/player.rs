@@ -53,7 +53,7 @@ pub fn spawn_player(
     //player
     commands.spawn((
         SpriteBundle {
-            transform: Transform::from_xyz(window.width() / 2.0, window.height() / 2.0, 0.0),
+            transform: Transform::from_xyz(window.width() / 2.0, window.height() / 2.0, 900.0),
             sprite: Sprite {
                 //custom_size: Some(Vec2::new(64.0, 64.0)),
                 ..default()
@@ -85,19 +85,19 @@ pub fn character_movement(
     time: Res<Time>,
 ) {
     for (mut transform, player) in &mut characters {
-        let movement_amount = player.mov_speed * time.delta_seconds();
-
+        let movement_amount_x = player.mov_speed * time.delta_seconds();
+        let movement_amount_y = (player.mov_speed - 200.) * time.delta_seconds(); 
         if input.pressed(KeyCode::W) {
-            transform.translation.y += movement_amount;
+            transform.translation.y += movement_amount_y;
         }
         if input.pressed(KeyCode::S) {
-            transform.translation.y -= movement_amount;
+            transform.translation.y -= movement_amount_y;
         }
         if input.pressed(KeyCode::D) {
-            transform.translation.x += movement_amount;
+            transform.translation.x += movement_amount_x;
         }
         if input.pressed(KeyCode::A) {
-            transform.translation.x -= movement_amount;
+            transform.translation.x -= movement_amount_x;
         }
         //println!("{:?}", transform);
     }

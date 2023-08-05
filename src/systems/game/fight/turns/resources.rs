@@ -12,6 +12,28 @@ impl Default for DamageHappeningTimer {
 }
 
 #[derive(Resource)]
+pub struct FightWinTimer{
+    pub timer: Timer
+}
+
+impl Default for FightWinTimer {
+    fn default() -> Self {
+        Self { timer: Timer::from_seconds(3.0, TimerMode::Once) }
+    }
+}
+
+#[derive(Resource)]
+pub struct FightLostTimer{
+    pub timer: Timer
+}
+
+impl Default for FightLostTimer {
+    fn default() -> Self {
+        Self { timer: Timer::from_seconds(4.0, TimerMode::Once) }
+    }
+}
+
+#[derive(Resource)]
 pub struct PlayerActiveLastTurn(pub bool);
 
 impl Default for PlayerActiveLastTurn {

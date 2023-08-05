@@ -20,6 +20,9 @@ pub struct WorldMapPlugin;
 impl Plugin for WorldMapPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((PlayerPlugin, EnemyPlugin))
+            // on enter
+            .add_systems(OnEnter(InGameState::WorldMap), load_background)
+            .add_systems(OnExit(InGameState::WorldMap), despawn_background)
             .add_systems(
                 Update,
                 (enemy_hit_player,)
@@ -33,18 +36,12 @@ impl Plugin for WorldMapPlugin {
                     .run_if(in_state(InGameState::WorldMap)),
             )
             //audio handle
-            .add_systems(
-                OnEnter(InGameState::WorldMap),
-                play_map_music,
-            )
+            .add_systems(OnEnter(InGameState::WorldMap), play_map_music)
             .add_systems(
                 OnExit(InGameState::WorldMap),
                 stop_map_music.run_if(in_state(AppState::Game)),
             )
-            .add_systems(
-                OnExit(AppState::Game),
-                stop_map_music
-            )
+            .add_systems(OnExit(AppState::Game), stop_map_music)
             .add_systems(
                 OnEnter(GameState::Paused),
                 volume_in_pause.run_if(in_state(InGameState::WorldMap)),
@@ -99,7 +96,7 @@ pub fn enemy_hit_player(
     audio_control: Query<&AudioSink, With<WorldMapTheme>>,
     mut next_game_state: ResMut<NextState<GameState>>,
     assest_server: Res<AssetServer>,
-    mut player_status: ResMut<PlayerStatus>
+    mut player_status: ResMut<PlayerStatus>,
 ) {
     if let Ok((player_entity, player_transform)) = player_query.get_single_mut() {
         for (enemy_entity, enemy_transform) in enemy_query.iter() {
@@ -107,10 +104,10 @@ pub fn enemy_hit_player(
                 .translation
                 .distance(enemy_transform.translation);
 
-            let player_radius = PLAYER_SIZE / 2.0;
-            let enemy_radius = ENEMY_SIZE.0 / 2.0;
-
-            if distance < player_radius + enemy_radius {
+            //let player_radius = PLAYER_SIZE / 2.0;
+            //let enemy_radius = ENEMY_SIZE.0 / 2.0;
+            let collision_distance = 50.;
+            if distance < collision_distance {
                 println!("Collision!, ATTACK");
                 player_status.transform = *player_transform;
                 commands.insert_resource(PlayerEntity {
@@ -120,8 +117,7 @@ pub fn enemy_hit_player(
                     entity: enemy_entity,
                 });
                 let monster_found_audio = assest_server.load("audio/effects/monster_found.wav");
-                commands.spawn(
-                    AudioBundle {
+                commands.spawn(AudioBundle {
                     source: monster_found_audio,
                     settings: PlaybackSettings {
                         mode: PlaybackMode::Once,
@@ -200,3 +196,38 @@ fn volume_in_running(audio_query: Query<&AudioSink, With<WorldMapTheme>>) {
     }
 }
 
+pub fn load_background(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    window_query: Query<&Window, With<PrimaryWindow>>,
+) {
+    let window = window_query.get_single().unwrap();
+    commands.spawn((
+        SpriteBundle {
+            transform: Transform::from_xyz(
+                window.width() / 2.0,
+                window.height() / 2.0,
+                0.0,
+            ),
+            sprite: Sprite {
+                custom_size: Some(Vec2::new(
+                    window.width(),
+                    window.height(),
+                )),
+                ..Default::default()
+            },
+            texture: asset_server.load("Background/world_map_background.png"),
+            ..Default::default()
+        },
+        WorldMapBackground,
+    ));
+}
+
+pub fn despawn_background(
+    mut commands: Commands,
+    world_map_q: Query<Entity, With<WorldMapBackground>>,
+) {
+    if let Ok(world_map) = world_map_q.get_single() {
+        commands.entity(world_map).despawn();
+    }
+}

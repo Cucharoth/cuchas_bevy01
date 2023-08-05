@@ -54,13 +54,15 @@ pub enum FightState {
     PlayerTurn,
     EnemyTurn,
     DamageHappening,
+    Win,
+    Lost
 }
 
 fn setup(
     mut commands: Commands,
     mut next_fight_state: ResMut<NextState<FightState>>,
     asset_server: Res<AssetServer>,
-    window_query: Query<&Window, With<PrimaryWindow>>
+    window_query: Query<&Window, With<PrimaryWindow>>,
 ) {
     commands.init_resource::<IntroTime>();
     commands.init_resource::<HalfIntroTime>();
@@ -74,6 +76,7 @@ pub fn intro_timer(
     time: Res<Time>,
 ) {
     if let Some(mut intro_time) = intro_time {
+        //println!("{:?}", intro_time.timer);
         intro_time.timer.tick(time.delta());
     }
     if let Some(mut half_intro_time) = half_intro_time {
@@ -139,7 +142,7 @@ fn intro_timer_check(
     enemy_query: Query<&Enemy, With<FightEnemy>>,
     intro_timer: Res<IntroTime>,
     mut next_fight_state: ResMut<NextState<FightState>>,
-    mut player_active_last_turn: ResMut<PlayerActiveLastTurn>
+    mut player_active_last_turn: ResMut<PlayerActiveLastTurn>,
 ) {
     if intro_timer.timer.finished() {
         commands.remove_resource::<IntroTime>();
@@ -209,9 +212,16 @@ fn load_background(
     let window = window_query.get_single().unwrap();
     commands.spawn((
         SpriteBundle {
-            transform: Transform::from_xyz(0.0 + (window.width() / 4.0), window.height() / 2.0, 0.0),
+            transform: Transform::from_xyz(
+                0.0 + (window.width() / 4.0),
+                window.height() / 2.0,
+                0.0,
+            ),
             sprite: Sprite {
-                custom_size: Some(Vec2::new(window.width() + (window.width() / 2.0) , window.height())),
+                custom_size: Some(Vec2::new(
+                    window.width() + (window.width() / 2.0),
+                    window.height(),
+                )),
                 flip_x: true,
                 ..default()
             },
@@ -221,8 +231,8 @@ fn load_background(
         FightBackGround,
         Movement {
             direction: Vec2::new(1.0, 0.0).normalize(),
-            speed: 500.0
-        }
+            speed: 500.0,
+        },
     ));
 
     /*commands.spawn(ImageBundle {
@@ -241,21 +251,17 @@ fn load_background(
 
 fn move_background(
     mut background_query: Query<(&mut Transform, &Movement), With<FightBackGround>>,
-    time: Res<Time>
+    time: Res<Time>,
 ) {
     if let Ok((mut transform, movement)) = background_query.get_single_mut() {
-        let direction = Vec3::new(
-            movement.direction.x,
-            movement.direction.y,
-            0.0
-        );
+        let direction = Vec3::new(movement.direction.x, movement.direction.y, 0.0);
         transform.translation += direction * movement.speed * time.delta_seconds();
     }
 }
 
 fn despawn_background(
     mut commands: Commands,
-    background_query: Query<Entity, With<FightBackGround>>
+    background_query: Query<Entity, With<FightBackGround>>,
 ) {
     if let Ok(entity) = background_query.get_single() {
         commands.entity(entity).despawn();
