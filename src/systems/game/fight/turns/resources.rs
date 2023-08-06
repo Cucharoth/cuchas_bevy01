@@ -50,3 +50,14 @@ impl Default for PlayerIsDefending {
         Self(false)
     }
 }
+
+#[derive(Resource)]
+pub struct CombatLog {
+    pub logs: Vec<(String, Color)>
+}
+
+impl Default for CombatLog {
+    fn default() -> Self {
+        Self { logs: vec![] }
+    }
+}

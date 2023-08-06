@@ -21,8 +21,10 @@ impl Plugin for FightUIPlugin {
             .add_event::<EnemyDamageEvent>()
             .add_event::<ReFocusButtonEvent>()
             .add_event::<HidePlayerSkillList>()
+            .add_plugins(CombatLogTextPlugin)
             .add_systems(Startup, add_extra_sprites)
-            .add_systems(OnEnter(FightState::Intro), (create_fight_ui))
+            // intro
+            .add_systems(OnEnter(FightState::Intro), (create_fight_ui, combat_log_root))
             // damage happening
             .add_systems(
                 Update,

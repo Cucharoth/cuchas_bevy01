@@ -15,6 +15,7 @@ impl Plugin for TurnsPlugin {
     fn build(&self, app: &mut App) {
         // damage happening
         app.init_resource::<PlayerIsDefending>()
+        .init_resource::<CombatLog>()
         .add_systems(
             OnEnter(FightState::DamageHappening),
             (damage_happening_timer).run_if(in_state(AppState::Game)),
@@ -33,6 +34,8 @@ impl Plugin for TurnsPlugin {
                 .run_if(in_state(AppState::Game))
                 .chain()
         )
+        // enter player turn
+        .add_systems(OnEnter(FightState::PlayerTurn), reset_player_is_defending)
         // enemy turn
         .add_systems(
             Update,

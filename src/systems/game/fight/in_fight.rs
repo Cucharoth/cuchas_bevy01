@@ -3,6 +3,8 @@ use super::enemy::*;
 use super::player::*;
 use super::resources::*;
 use super::turns::TurnsPlugin;
+use super::turns::events::CombatLogEvent;
+use super::turns::systems::clear_combat_log;
 use crate::components::Player;
 use crate::fight::components::Enemy;
 use crate::prelude::*;
@@ -16,9 +18,11 @@ pub struct FightPlugin;
 impl Plugin for FightPlugin {
     fn build(&self, app: &mut App) {
         app.add_state::<FightState>()
+            .add_event::<CombatLogEvent>()
             .init_resource::<PlayerActiveLastTurn>()
             .add_plugins((PlayerPlugin, EnemyPlugin, TurnsPlugin))
             .add_systems(OnEnter(InGameState::Fight), setup)
+            // intro
             .add_systems(
                 Update,
                 (
@@ -32,7 +36,8 @@ impl Plugin for FightPlugin {
                     .run_if(in_state(FightState::Intro))
                     .run_if(in_state(GameState::Running)),
             )
-            .add_systems(OnExit(InGameState::Fight), despawn_background)
+            .add_systems(Update, handle_combat_log_events.run_if(in_state(InGameState::Fight)))
+            .add_systems(OnExit(InGameState::Fight), (despawn_background, clear_combat_log))
             //Audio handling
             .add_systems(OnEnter(InGameState::Fight), (play_fight_music))
             .add_systems(OnExit(InGameState::Fight), stop_fight_music)
@@ -266,4 +271,14 @@ fn despawn_background(
     if let Ok(entity) = background_query.get_single() {
         commands.entity(entity).despawn();
     }
+}
+
+pub fn handle_combat_log_events(
+    mut combat_log_event: EventReader<CombatLogEvent>,
+    mut combat_log: ResMut<CombatLog>
+) {
+    for combat_log_event in combat_log_event.iter() {
+        combat_log.logs.insert(0, (combat_log_event.log.clone(), combat_log_event.color));
+    }
+    //combat_log.logs.sort_by_key(|b|  )
 }

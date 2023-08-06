@@ -20,6 +20,31 @@ use bevy_ui_navigation::prelude::NavRequest;
 use bevy_ui_navigation::prelude::{FocusState, Focusable, NavEvent};
 use rand::prelude::*;
 
+pub struct CombatLogTextPlugin;
+
+impl Plugin for CombatLogTextPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(
+            Update,
+            (
+                update_node_10,
+                update_node_9,
+                update_node_8,
+                update_node_7,
+                update_node_6,
+                update_node_5,
+                update_node_4,
+                update_node_3,
+                update_node_2,
+                update_node_1,
+            )
+            .chain(),
+        )
+        .add_systems(OnEnter(FightState::PlayerTurn), show_combat_log)
+        .add_systems(OnExit(InGameState::Fight), despawn_combat_log);
+    }
+}
+
 pub fn button_system(
     mut commands: Commands,
     mut interaction_query: Query<
@@ -99,13 +124,14 @@ pub fn interact_with_attack_button(
     mut event_writter: EventWriter<PlayerDamageEvent>,
     mut next_fight_state: ResMut<NextState<FightState>>,
     button_in_audio: Res<ButtonInAudio>,
+    mut combat_log_event_writer: EventWriter<CombatLogEvent>
 ) {
     if let Ok((button_entity, mut background_color)) = attack_button_q.get_single_mut() {
         for event in events.iter() {
             if event.is_activated(button_entity) {
                 plays_button_in_audio(&mut commands, &button_in_audio);
                 *background_color = FIGHT_UI_ACTIONED_BUTTON_COLOR.into();
-                player_attack(&player_status, &mut event_writter);
+                player_attack(&player_status, &mut event_writter, &mut combat_log_event_writer);
                 next_fight_state.set(FightState::DamageHappening);
                 println!("DAMAGE HAPPENING");
             }
@@ -167,6 +193,7 @@ pub fn interact_with_defend_button(
     button_in_audio: Res<ButtonInAudio>,
     mut next_fight_state: ResMut<NextState<FightState>>,
     mut player_defending: ResMut<PlayerIsDefending>,
+    mut combat_log_event_writer: EventWriter<CombatLogEvent>
 ) {
     if let Ok((defend_button_entity, mut background_color)) = defend_button_q.get_single_mut() {
         for event in events.iter() {
@@ -175,6 +202,12 @@ pub fn interact_with_defend_button(
                 player_defending.0 = true;
                 *background_color = FIGHT_UI_ACTIONED_BUTTON_COLOR.into();
                 println!("Player is defending");
+                combat_log_event_writer.send(
+                    CombatLogEvent {
+                        log: "Player is defending".to_string(),
+                        color: FIGHT_COMBAT_LOG_TEXT_COLOR
+                    }
+                );
                 next_fight_state.set(FightState::DamageHappening);
             }
         }
@@ -191,6 +224,7 @@ pub fn interact_with_escape_button(
     window_query: Query<&Window, With<PrimaryWindow>>,
     asset_server: Res<AssetServer>,
     mut player_status: ResMut<PlayerStatus>,
+    mut combat_log_event_writer: EventWriter<CombatLogEvent>
 ) {
     if let Ok((escape_button_entity, mut background_color)) = escape_button_q.get_single_mut() {
         for event in events.iter() {
@@ -207,11 +241,23 @@ pub fn interact_with_escape_button(
                 if player_escapes {
                     player_status.bad_luck_protection = 0.;
                     println!("Player Escapes!");
+                    combat_log_event_writer.send(
+                        CombatLogEvent {
+                            log: format!("Player Escapes!"),
+                            color: FIGHT_COMBAT_LOG_TEXT_COLOR
+                        }
+                    );
                     next_ingame_state.set(InGameState::WorldMap);
                     spawn_single_enemy(&mut commands, &window_query, &asset_server, &player_status);
                 } else {
                     player_status.bad_luck_protection += 0.2;
                     println!("Player tried to escape but the enemy was too fast!");
+                    combat_log_event_writer.send(
+                        CombatLogEvent {
+                            log: format!("Player tried to escape but the enemy was too fast!"),
+                            color: FIGHT_COMBAT_LOG_TEXT_COLOR
+                        }
+                    );
                     next_fight_state.set(FightState::DamageHappening);
                 }
             }
@@ -232,6 +278,7 @@ pub fn interact_with_skill_list_button(
     mut re_focus_event_writter: EventWriter<ReFocusButtonEvent>,
     mut hide_psl_event: EventWriter<HidePlayerSkillList>,
     mut player_status: ResMut<PlayerStatus>,
+    mut combat_log_event_writer: EventWriter<CombatLogEvent>
 ) {
     if let Ok(skill_buttons) = player_skill_list_button_q.get_single() {
         for event in nav_event_reader.iter() {
@@ -244,10 +291,15 @@ pub fn interact_with_skill_list_button(
                     let mut sara_cast_succesful = sara_cast_succes_q.get_single_mut().unwrap();
                     *sara_cast_succesful = Visibility::Visible;
 
-
                     let player_skill = with_player_skill.get(*skill_button_entity).unwrap();
                     if player_status.mana >= player_skill.mana_cost {
                         println!("Player uses {}!", player_skill.name);
+                        combat_log_event_writer.send(
+                            CombatLogEvent {
+                                log: format!("Player uses {}!", player_skill.name),
+                                color: FIGHT_COMBAT_LOG_TEXT_COLOR
+                            }
+                        );
                         player_status.mana -= player_skill.mana_cost;
                         dmg_event_writter.send(PlayerDamageEvent {
                             damage: player_skill.damage,
@@ -267,6 +319,12 @@ pub fn interact_with_skill_list_button(
                         next_fight_state.set(FightState::DamageHappening);
                     } else {
                         println!("Player mana is too low!");
+                        combat_log_event_writer.send(
+                            CombatLogEvent {
+                                log: format!("Player mana is too low!"),
+                                color: FIGHT_COMBAT_LOG_TEXT_COLOR
+                            }
+                        );
                     }
                 }
             }
@@ -355,7 +413,10 @@ pub fn back_from_skill_list(
     mut nav_request_event: EventReader<NavRequest>,
     mut player_sprite_vis_q: Query<&mut Visibility, (With<FightPlayer>, Without<SaraCast>)>,
     mut sara_cast_vis_q: Query<&mut Visibility, (With<SaraCast>, Without<SkillListNode>)>,
-    mut player_skill_list_button_q: Query<(&mut Visibility, &mut Children), (With<SkillListNode>, Without<FightPlayer>)>,
+    mut player_skill_list_button_q: Query<
+        (&mut Visibility, &mut Children),
+        (With<SkillListNode>, Without<FightPlayer>),
+    >,
     mut player_buttons_q: Query<&mut Children, (With<PlayerButtonsNode>, Without<SkillListNode>)>,
     mut focusable_q: Query<&mut Focusable>,
     mut event_writter: EventWriter<ReFocusButtonEvent>,
@@ -401,7 +462,10 @@ fn unlock_player_buttons(
 }
 
 fn lock_skill_list(
-    player_skill_list_button_q: &mut Query<(&mut Visibility, &mut Children), (With<SkillListNode>, Without<FightPlayer>)>,
+    player_skill_list_button_q: &mut Query<
+        (&mut Visibility, &mut Children),
+        (With<SkillListNode>, Without<FightPlayer>),
+    >,
     focusable_q: &mut Query<&mut Focusable>,
 ) {
     if let Ok((mut skill_list_visibility, childrens)) = player_skill_list_button_q.get_single_mut()
@@ -432,7 +496,10 @@ pub fn show_status_ui(mut status_ui_q: Query<&mut Visibility, With<StatusUI>>) {
 
 pub fn hide_sara_cast(
     mut sara_cast_succes_q: Query<&mut Visibility, (With<SaraCastSuccesful>, Without<FightPlayer>)>,
-    mut player_sprite_vis_q: Query<&mut Visibility, (With<FightPlayer>, Without<SaraCastSuccesful>)>
+    mut player_sprite_vis_q: Query<
+        &mut Visibility,
+        (With<FightPlayer>, Without<SaraCastSuccesful>),
+    >,
 ) {
     let mut sara_cast_succes = sara_cast_succes_q.get_single_mut().unwrap();
     *sara_cast_succes = Visibility::Hidden;
@@ -452,10 +519,182 @@ pub fn reset_sara_sprites_1(
 
 pub fn reset_sara_sprites_2(
     mut sara_cast_succes_q: Query<&mut Visibility, (With<SaraCastSuccesful>, Without<FightPlayer>)>,
-    mut player_sprite_vis_q: Query<&mut Visibility, (With<FightPlayer>, Without<SaraCastSuccesful>)>
+    mut player_sprite_vis_q: Query<
+        &mut Visibility,
+        (With<FightPlayer>, Without<SaraCastSuccesful>),
+    >,
 ) {
     let mut sara_cast_succes = sara_cast_succes_q.get_single_mut().unwrap();
     *sara_cast_succes = Visibility::Hidden;
     let mut player_sprite = player_sprite_vis_q.get_single_mut().unwrap();
     *player_sprite = Visibility::Visible;
+}
+
+
+
+fn update_node_1(
+    mut combat_log_text_q: Query<&mut Text, With<CombatLogText1>>,
+    combat_log: Res<CombatLog>,
+) {
+    let mut vec_combat_log = combat_log.logs.clone();
+    if vec_combat_log.len() > 0 {
+        if let Some((log, color)) = vec_combat_log.get_mut(9) {
+            if let Ok(mut text) = combat_log_text_q.get_single_mut() {
+                text.sections[0].value = log.clone();
+                text.sections[0].style.color = *color;
+            }
+        }
+    }
+}
+
+fn update_node_2(
+    mut combat_log_text_q: Query<&mut Text, With<CombatLogText2>>,
+    combat_log: Res<CombatLog>,
+) {
+    let mut vec_combat_log = combat_log.logs.clone();
+    if vec_combat_log.len() > 0 {
+        if let Some((log, color)) = vec_combat_log.get_mut(8) {
+            if let Ok(mut text) = combat_log_text_q.get_single_mut() {
+                text.sections[0].value = log.clone();
+                text.sections[0].style.color = *color;
+            }
+        }
+    }
+}
+
+fn update_node_3(
+    mut combat_log_text_q: Query<&mut Text, With<CombatLogText3>>,
+    combat_log: Res<CombatLog>,
+) {
+    let mut vec_combat_log = combat_log.logs.clone();
+    if vec_combat_log.len() > 0 {
+        if let Some((log, color)) = vec_combat_log.get_mut(7) {
+            if let Ok(mut text) = combat_log_text_q.get_single_mut() {
+                text.sections[0].value = log.clone();
+                text.sections[0].style.color = *color;
+            }
+        }
+    }
+}
+
+fn update_node_4(
+    mut combat_log_text_q: Query<&mut Text, With<CombatLogText4>>,
+    combat_log: Res<CombatLog>,
+) {
+    let mut vec_combat_log = combat_log.logs.clone();
+    if vec_combat_log.len() > 0 {
+        if let Some((log, color)) = vec_combat_log.get_mut(6) {
+            if let Ok(mut text) = combat_log_text_q.get_single_mut() {
+                text.sections[0].value = log.clone();
+                text.sections[0].style.color = *color;
+            }
+        }
+    }
+}
+
+fn update_node_5(
+    mut combat_log_text_q: Query<&mut Text, With<CombatLogText5>>,
+    combat_log: Res<CombatLog>,
+) {
+    let mut vec_combat_log = combat_log.logs.clone();
+    if vec_combat_log.len() > 0 {
+        if let Some((log, color)) = vec_combat_log.get_mut(5) {
+            if let Ok(mut text) = combat_log_text_q.get_single_mut() {
+                text.sections[0].value = log.clone();
+                text.sections[0].style.color = *color;
+            }
+        }
+    }
+}
+
+fn update_node_6(
+    mut combat_log_text_q: Query<&mut Text, With<CombatLogText6>>,
+    combat_log: Res<CombatLog>,
+) {
+    let mut vec_combat_log = combat_log.logs.clone();
+    if vec_combat_log.len() > 0 {
+        if let Some((log, color)) = vec_combat_log.get_mut(4) {
+            if let Ok(mut text) = combat_log_text_q.get_single_mut() {
+                text.sections[0].value = log.clone();
+                text.sections[0].style.color = *color;
+            }
+        }
+    }
+}
+
+fn update_node_7(
+    mut combat_log_text_q: Query<&mut Text, With<CombatLogText7>>,
+    combat_log: Res<CombatLog>,
+) {
+    let mut vec_combat_log = combat_log.logs.clone();
+    if vec_combat_log.len() > 0 {
+        if let Some((log, color)) = vec_combat_log.get_mut(3) {
+            if let Ok(mut text) = combat_log_text_q.get_single_mut() {
+                text.sections[0].value = log.clone();
+                text.sections[0].style.color = *color;
+            }
+        }
+    }
+}
+
+fn update_node_8(
+    mut combat_log_text_q: Query<&mut Text, With<CombatLogText8>>,
+    combat_log: Res<CombatLog>,
+) {
+    let mut vec_combat_log = combat_log.logs.clone();
+    if vec_combat_log.len() > 0 {
+        if let Some((log, color)) = vec_combat_log.get_mut(2) {
+            if let Ok(mut text) = combat_log_text_q.get_single_mut() {
+                text.sections[0].value = log.clone();
+                text.sections[0].style.color = *color;
+            }
+        }
+    }
+}
+
+fn update_node_9(
+    mut combat_log_text_q: Query<&mut Text, With<CombatLogText9>>,
+    combat_log: Res<CombatLog>,
+) {
+    let mut vec_combat_log = combat_log.logs.clone();
+    if vec_combat_log.len() > 0 {
+        if let Some((log, color)) = vec_combat_log.get_mut(1) {
+            if let Ok(mut text) = combat_log_text_q.get_single_mut() {
+                text.sections[0].value = log.clone();
+                text.sections[0].style.color = *color;
+            }
+        }
+    }
+}
+
+fn update_node_10(
+    mut combat_log_text_q: Query<&mut Text, With<CombatLogText10>>,
+    combat_log: Res<CombatLog>,
+) {
+    let mut vec_combat_log = combat_log.logs.clone();
+    if vec_combat_log.len() > 0 {
+        if let Some((log, color)) = vec_combat_log.get_mut(0) {
+            if let Ok(mut text) = combat_log_text_q.get_single_mut() {
+                text.sections[0].value = log.clone();
+                text.sections[0].style.color = *color;
+            }
+        }
+    }
+}
+
+fn despawn_combat_log(
+    mut commands: Commands,
+    combat_log_root_q: Query<Entity, With<CombatLogRoot>>
+) {
+    if let Ok(combat_log_root_entity) = combat_log_root_q.get_single() {
+        commands.entity(combat_log_root_entity).despawn_recursive();
+    }
+}
+
+fn show_combat_log(
+    mut combat_log_buttons_q: Query<&mut Visibility, With<CombatLogButtons>>
+){
+    if let Ok(mut combat_log_vis) = combat_log_buttons_q.get_single_mut() {
+        *combat_log_vis = Visibility::Visible;
+    }
 }

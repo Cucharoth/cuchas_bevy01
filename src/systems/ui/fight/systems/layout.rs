@@ -16,20 +16,21 @@ pub fn create_fight_ui(
     mut enemy_q: Query<&Enemy, With<Enemy>>,
 ) {
     commands
-        .spawn((NodeBundle {
-            style: Style {
-                align_items: AlignItems::End,
-                //justify_content: JustifyContent::Start,
-                //align_content: AlignContent::End,
-                width: Val::Percent(100.0),
-                height: Val::Percent(100.0),
+        .spawn((
+            NodeBundle {
+                style: Style {
+                    align_items: AlignItems::End,
+                    //justify_content: JustifyContent::Start,
+                    //align_content: AlignContent::End,
+                    width: Val::Percent(100.0),
+                    height: Val::Percent(100.0),
+                    ..Default::default()
+                },
+                visibility: Visibility::Hidden,
                 ..Default::default()
             },
-            visibility: Visibility::Hidden,
-            ..Default::default()
-        },
-        FightNodeRoot
-    ))
+            FightNodeRoot,
+        ))
         .with_children(|parent| {
             create_buttons_node(parent, &asset_server, &mut input_mapping);
             create_enemy_status_node(parent, &asset_server, enemy_q);
@@ -306,7 +307,7 @@ fn create_node_skill_1(parent: &mut ChildBuilder, asset_server: &Res<AssetServer
                 damage: 20.,
                 mana_cost: 20.,
                 effect: Some(Debuff::Freezing),
-                effect_duration: Some(1.)
+                effect_duration: Some(1.),
             },
             Focusable::default(),
         ))
@@ -350,7 +351,7 @@ fn create_node_skill_2(parent: &mut ChildBuilder, asset_server: &Res<AssetServer
                 damage: 20.,
                 mana_cost: 20.,
                 effect: Some(Debuff::Burning),
-                effect_duration: Some(2.)
+                effect_duration: Some(2.),
             },
             Focusable::default(),
         ))
@@ -394,7 +395,7 @@ fn create_node_skill_3(parent: &mut ChildBuilder, asset_server: &Res<AssetServer
                 damage: 30.,
                 mana_cost: 20.,
                 effect: None,
-                effect_duration: None
+                effect_duration: None,
             },
             Focusable::default(),
         ))
@@ -438,7 +439,7 @@ fn create_node_skill_4(parent: &mut ChildBuilder, asset_server: &Res<AssetServer
                 damage: 15.,
                 mana_cost: 20.,
                 effect: Some(Debuff::Blindness),
-                effect_duration: Some(1.)
+                effect_duration: Some(1.),
             },
             Focusable::default(),
         ))
@@ -573,7 +574,7 @@ fn create_status_node(
                 ..Default::default()
             },
             FightStatusNode,
-            StatusUI
+            StatusUI,
         ))
         .with_children(|parent| {
             parent.spawn((
@@ -614,4 +615,526 @@ fn create_status_node(
                 FightStatusMP,
             ));
         });
+}
+
+pub fn combat_log_root(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands
+        .spawn(
+            (NodeBundle {
+                style: Style {
+                    position_type: PositionType::Absolute,
+                    flex_direction: FlexDirection::Row,
+                    //align_items: AlignItems::End,
+                    //align_self: AlignSelf::Center,
+                    //justify_self: JustifySelf::Center,
+                    justify_content: JustifyContent::End,
+                    //left: Val::Percent(50.),
+                    //bottom: Val::Percent(70.),
+                    width: Val::Percent(100.0),
+                    height: Val::Percent(100.0),
+                    //row_gap: Val::Px(8.0),
+                    /*padding: UiRect {
+                        left: Val::Percent(1.0),
+                        right: Val::Percent(1.0),
+                        top: Val::Percent(1.0),
+                        bottom: Val::Percent(1.0),
+                    }*/
+                    ..Default::default()
+                },
+                visibility: Visibility::Hidden,
+                background_color: FIGHT_UI_BUTTON_COLOR.into(),
+                ..Default::default()
+            },
+            CombatLogRoot
+        ),
+        )
+        .with_children(|parent| {
+            create_combat_log_buttons(parent, &asset_server);
+        });
+}
+
+fn create_combat_log_buttons(parent: &mut ChildBuilder, asset_server: &Res<AssetServer>) {
+    parent.spawn(
+        (NodeBundle {
+            style: Style {
+                position_type: PositionType::Relative,
+                flex_direction: FlexDirection::Column,
+                align_items: AlignItems::Center,
+                //align_self: AlignSelf::Center,
+                //justify_self: JustifySelf::Center,
+                justify_content: JustifyContent::Center,
+                //left: Val::Percent(50.),
+                //bottom: Val::Percent(70.),
+                width: Val::Percent(35.0),
+                height: Val::Percent(30.0),
+                //row_gap: Val::Px(2.0),
+                /*padding: UiRect {
+                    left: Val::Percent(1.0),
+                    right: Val::Percent(1.0),
+                    top: Val::Percent(1.0),
+                    bottom: Val::Percent(1.0),
+                }*/
+                ..Default::default()
+            },
+            visibility: Visibility::Hidden,
+            background_color: FIGHT_UI_NODE_BUTTONS_COLOR.into(),
+            ..Default::default()
+        },
+        CombatLogButtons
+    ),
+    )
+    .with_children(
+        |parent| {
+            create_node_combat_log_1(parent, &asset_server);
+            create_node_combat_log_2(parent, &asset_server);
+            create_node_combat_log_3(parent, &asset_server);
+            create_node_combat_log_4(parent, &asset_server);
+            create_node_combat_log_5(parent, &asset_server);
+            create_node_combat_log_6(parent, &asset_server);
+            create_node_combat_log_7(parent, &asset_server);
+            create_node_combat_log_8(parent, &asset_server);
+            create_node_combat_log_9(parent, &asset_server);
+            create_node_combat_log_10(parent, &asset_server);
+        }
+    );
+}
+
+fn create_node_combat_log_1(
+    parent: &mut ChildBuilder, asset_server: &Res<AssetServer>
+) {
+    parent.spawn(
+        (NodeBundle {
+            style: Style {
+                position_type: PositionType::Relative,
+                flex_direction: FlexDirection::Row,
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::Start,
+                width: Val::Percent(95.0),
+                height: Val::Percent(9.3),
+                ..Default::default()
+            },
+            visibility: Visibility::Inherited,
+            background_color: FIGHT_UI_NODE_BUTTONS_COLOR.into(),
+            ..Default::default()
+        }),
+    )
+    .with_children(
+        |parent| {
+            parent.spawn((
+                TextBundle {
+                    text: Text {
+                        sections: vec![TextSection::new(
+                            "",
+                            TextStyle {
+                                font: asset_server.load("fonts/FiraSans-Bold.ttf"),
+                                font_size: FIGHT_COMBAT_LOG_TEXT_SIZE,
+                                color: FIGHT_COMBAT_LOG_TEXT_COLOR,
+                            },
+                        )],
+                        alignment: TextAlignment::Left,
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                },
+                CombatLogText1,
+                LogText
+            ));
+        }
+    );
+}
+
+fn create_node_combat_log_2(
+    parent: &mut ChildBuilder, asset_server: &Res<AssetServer>
+) {
+    parent.spawn(
+        (NodeBundle {
+            style: Style {
+                position_type: PositionType::Relative,
+                flex_direction: FlexDirection::Row,
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::Start,
+                width: Val::Percent(95.0),
+                height: Val::Percent(9.3),
+                ..Default::default()
+            },
+            visibility: Visibility::Inherited,
+            background_color: FIGHT_UI_NODE_BUTTONS_COLOR.into(),
+            ..Default::default()
+        }),
+    )
+    .with_children(
+        |parent| {
+            parent.spawn((
+                TextBundle {
+                    text: Text {
+                        sections: vec![TextSection::new(
+                            "",
+                            TextStyle {
+                                font: asset_server.load("fonts/FiraSans-Bold.ttf"),
+                                font_size: FIGHT_COMBAT_LOG_TEXT_SIZE,
+                                color: FIGHT_COMBAT_LOG_TEXT_COLOR,
+                            },
+                        )],
+                        alignment: TextAlignment::Left,
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                },
+                CombatLogText2,
+                LogText
+            ));
+        }
+    );
+}
+
+fn create_node_combat_log_3(
+    parent: &mut ChildBuilder, asset_server: &Res<AssetServer>
+) {
+    parent.spawn(
+        (NodeBundle {
+            style: Style {
+                position_type: PositionType::Relative,
+                flex_direction: FlexDirection::Row,
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::Start,
+                width: Val::Percent(95.0),
+                height: Val::Percent(9.3),
+                ..Default::default()
+            },
+            visibility: Visibility::Inherited,
+            background_color: FIGHT_UI_NODE_BUTTONS_COLOR.into(),
+            ..Default::default()
+        }),
+    )
+    .with_children(
+        |parent| {
+            parent.spawn((
+                TextBundle {
+                    text: Text {
+                        sections: vec![TextSection::new(
+                            "",
+                            TextStyle {
+                                font: asset_server.load("fonts/FiraSans-Bold.ttf"),
+                                font_size: FIGHT_COMBAT_LOG_TEXT_SIZE,
+                                color: FIGHT_COMBAT_LOG_TEXT_COLOR,
+                            },
+                        )],
+                        alignment: TextAlignment::Left,
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                },
+                CombatLogText3,
+                LogText
+            ));
+        }
+    );
+}
+
+fn create_node_combat_log_4(
+    parent: &mut ChildBuilder, asset_server: &Res<AssetServer>
+) {
+    parent.spawn(
+        (NodeBundle {
+            style: Style {
+                position_type: PositionType::Relative,
+                flex_direction: FlexDirection::Row,
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::Start,
+                width: Val::Percent(95.0),
+                height: Val::Percent(9.3),
+                ..Default::default()
+            },
+            visibility: Visibility::Inherited,
+            background_color: FIGHT_UI_NODE_BUTTONS_COLOR.into(),
+            ..Default::default()
+        }),
+    )
+    .with_children(
+        |parent| {
+            parent.spawn((
+                TextBundle {
+                    text: Text {
+                        sections: vec![TextSection::new(
+                            "",
+                            TextStyle {
+                                font: asset_server.load("fonts/FiraSans-Bold.ttf"),
+                                font_size: FIGHT_COMBAT_LOG_TEXT_SIZE,
+                                color: FIGHT_COMBAT_LOG_TEXT_COLOR,
+                            },
+                        )],
+                        alignment: TextAlignment::Left,
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                },
+                CombatLogText4,
+                LogText
+            ));
+        }
+    );
+}
+
+fn create_node_combat_log_5(
+    parent: &mut ChildBuilder, asset_server: &Res<AssetServer>
+) {
+    parent.spawn(
+        (NodeBundle {
+            style: Style {
+                position_type: PositionType::Relative,
+                flex_direction: FlexDirection::Row,
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::Start,
+                width: Val::Percent(95.0),
+                height: Val::Percent(9.3),
+                ..Default::default()
+            },
+            visibility: Visibility::Inherited,
+            background_color: FIGHT_UI_NODE_BUTTONS_COLOR.into(),
+            ..Default::default()
+        }),
+    )
+    .with_children(
+        |parent| {
+            parent.spawn((
+                TextBundle {
+                    text: Text {
+                        sections: vec![TextSection::new(
+                            "",
+                            TextStyle {
+                                font: asset_server.load("fonts/FiraSans-Bold.ttf"),
+                                font_size: FIGHT_COMBAT_LOG_TEXT_SIZE,
+                                color: FIGHT_COMBAT_LOG_TEXT_COLOR,
+                            },
+                        )],
+                        alignment: TextAlignment::Left,
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                },
+                CombatLogText5,
+                LogText
+            ));
+        }
+    );
+}
+
+fn create_node_combat_log_6(
+    parent: &mut ChildBuilder, asset_server: &Res<AssetServer>
+) {
+    parent.spawn(
+        (NodeBundle {
+            style: Style {
+                position_type: PositionType::Relative,
+                flex_direction: FlexDirection::Row,
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::Start,
+                width: Val::Percent(95.0),
+                height: Val::Percent(9.3),
+                ..Default::default()
+            },
+            visibility: Visibility::Inherited,
+            background_color: FIGHT_UI_NODE_BUTTONS_COLOR.into(),
+            ..Default::default()
+        }),
+    )
+    .with_children(
+        |parent| {
+            parent.spawn((
+                TextBundle {
+                    text: Text {
+                        sections: vec![TextSection::new(
+                            "",
+                            TextStyle {
+                                font: asset_server.load("fonts/FiraSans-Bold.ttf"),
+                                font_size: FIGHT_COMBAT_LOG_TEXT_SIZE,
+                                color: FIGHT_COMBAT_LOG_TEXT_COLOR,
+                            },
+                        )],
+                        alignment: TextAlignment::Left,
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                },
+                CombatLogText6,
+                LogText
+            ));
+        }
+    );
+}
+
+fn create_node_combat_log_7(
+    parent: &mut ChildBuilder, asset_server: &Res<AssetServer>
+) {
+    parent.spawn(
+        (NodeBundle {
+            style: Style {
+                position_type: PositionType::Relative,
+                flex_direction: FlexDirection::Row,
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::Start,
+                width: Val::Percent(95.0),
+                height: Val::Percent(9.3),
+                ..Default::default()
+            },
+            visibility: Visibility::Inherited,
+            background_color: FIGHT_UI_NODE_BUTTONS_COLOR.into(),
+            ..Default::default()
+        }),
+    )
+    .with_children(
+        |parent| {
+            parent.spawn((
+                TextBundle {
+                    text: Text {
+                        sections: vec![TextSection::new(
+                            "",
+                            TextStyle {
+                                font: asset_server.load("fonts/FiraSans-Bold.ttf"),
+                                font_size: FIGHT_COMBAT_LOG_TEXT_SIZE,
+                                color: FIGHT_COMBAT_LOG_TEXT_COLOR,
+                            },
+                        )],
+                        alignment: TextAlignment::Left,
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                },
+                CombatLogText7,
+                LogText
+            ));
+        }
+    );
+}
+
+fn create_node_combat_log_8(
+    parent: &mut ChildBuilder, asset_server: &Res<AssetServer>
+) {
+    parent.spawn(
+        (NodeBundle {
+            style: Style {
+                position_type: PositionType::Relative,
+                flex_direction: FlexDirection::Row,
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::Start,
+                width: Val::Percent(95.0),
+                height: Val::Percent(9.3),
+                ..Default::default()
+            },
+            visibility: Visibility::Inherited,
+            background_color: FIGHT_UI_NODE_BUTTONS_COLOR.into(),
+            ..Default::default()
+        }),
+    )
+    .with_children(
+        |parent| {
+            parent.spawn((
+                TextBundle {
+                    text: Text {
+                        sections: vec![TextSection::new(
+                            "",
+                            TextStyle {
+                                font: asset_server.load("fonts/FiraSans-Bold.ttf"),
+                                font_size: FIGHT_COMBAT_LOG_TEXT_SIZE,
+                                color: FIGHT_COMBAT_LOG_TEXT_COLOR,
+                            },
+                        )],
+                        alignment: TextAlignment::Left,
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                },
+                CombatLogText8,
+                LogText
+            ));
+        }
+    );
+}
+
+fn create_node_combat_log_9(
+    parent: &mut ChildBuilder, asset_server: &Res<AssetServer>
+) {
+    parent.spawn(
+        (NodeBundle {
+            style: Style {
+                position_type: PositionType::Relative,
+                flex_direction: FlexDirection::Row,
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::Start,
+                width: Val::Percent(95.0),
+                height: Val::Percent(9.3),
+                ..Default::default()
+            },
+            visibility: Visibility::Inherited,
+            background_color: FIGHT_UI_NODE_BUTTONS_COLOR.into(),
+            ..Default::default()
+        }),
+    )
+    .with_children(
+        |parent| {
+            parent.spawn((
+                TextBundle {
+                    text: Text {
+                        sections: vec![TextSection::new(
+                            "",
+                            TextStyle {
+                                font: asset_server.load("fonts/FiraSans-Bold.ttf"),
+                                font_size: FIGHT_COMBAT_LOG_TEXT_SIZE,
+                                color: FIGHT_COMBAT_LOG_TEXT_COLOR,
+                            },
+                        )],
+                        alignment: TextAlignment::Left,
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                },
+                CombatLogText9,
+                LogText
+            ));
+        }
+    );
+}
+
+fn create_node_combat_log_10(
+    parent: &mut ChildBuilder, asset_server: &Res<AssetServer>
+) {
+    parent.spawn(
+        (NodeBundle {
+            style: Style {
+                position_type: PositionType::Relative,
+                flex_direction: FlexDirection::Row,
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::Start,
+                width: Val::Percent(95.0),
+                height: Val::Percent(9.3),
+                ..Default::default()
+            },
+            visibility: Visibility::Inherited,
+            background_color: FIGHT_UI_NODE_BUTTONS_COLOR.into(),
+            ..Default::default()
+        }),
+    )
+    .with_children(
+        |parent| {
+            parent.spawn((
+                TextBundle {
+                    text: Text {
+                        sections: vec![TextSection::new(
+                            "",
+                            TextStyle {
+                                font: asset_server.load("fonts/FiraSans-Bold.ttf"),
+                                font_size: FIGHT_COMBAT_LOG_TEXT_SIZE,
+                                color: FIGHT_COMBAT_LOG_TEXT_COLOR,
+                            },
+                        )],
+                        alignment: TextAlignment::Left,
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                },
+                CombatLogText10,
+                LogText
+            ));
+        }
+    );
 }

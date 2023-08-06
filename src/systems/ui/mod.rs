@@ -2,6 +2,7 @@ pub mod fight;
 pub mod main_menu;
 pub mod resources;
 pub mod components;
+pub mod pause_menu;
 use crate::systems::ui::main_menu::menu::MainMenuPlugin;
 use crate::systems::ui::fight::FightUIPlugin;
 //use crate::systems::ui::components::*;

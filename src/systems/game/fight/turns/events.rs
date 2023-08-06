@@ -17,3 +17,15 @@ pub enum DamageType {
 
 #[derive(Event)]
 pub struct EnemyDamageEvent(pub f32);
+
+#[derive(Event)]
+pub struct CombatLogEvent {
+    pub log: String,
+    pub color: Color
+}
+
+impl Default for CombatLogEvent {
+    fn default() -> Self {
+        Self { log: String::new(), color: Color::BLACK }
+    }
+}
