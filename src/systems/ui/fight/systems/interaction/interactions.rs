@@ -38,7 +38,7 @@ impl Plugin for CombatLogTextPlugin {
                 update_node_2,
                 update_node_1,
             )
-            .chain(),
+                .chain(),
         )
         .add_systems(OnEnter(FightState::PlayerTurn), show_combat_log)
         .add_systems(OnExit(InGameState::Fight), despawn_combat_log);
@@ -118,20 +118,33 @@ pub fn update_mp_player_status_node(
 
 pub fn interact_with_attack_button(
     mut commands: Commands,
+    mut player_sprite_vis_q: Query<
+        &mut Visibility,
+        (With<FightPlayer>, Without<SaraCastSuccesful>),
+    >,
+    mut sara_cast_succes_q: Query<&mut Visibility, (With<SaraCastSuccesful>, Without<FightPlayer>)>,
     mut attack_button_q: Query<(Entity, &mut BackgroundColor), With<FightAttackButton>>,
     mut events: EventReader<NavEvent>,
     player_status: Res<PlayerStatus>,
     mut event_writter: EventWriter<PlayerDamageEvent>,
     mut next_fight_state: ResMut<NextState<FightState>>,
     button_in_audio: Res<ButtonInAudio>,
-    mut combat_log_event_writer: EventWriter<CombatLogEvent>
+    mut combat_log_event_writer: EventWriter<CombatLogEvent>,
 ) {
     if let Ok((button_entity, mut background_color)) = attack_button_q.get_single_mut() {
         for event in events.iter() {
             if event.is_activated(button_entity) {
+                let mut player_sprite_vis = player_sprite_vis_q.get_single_mut().unwrap();
+                *player_sprite_vis = Visibility::Hidden;
+                let mut sara_cast_succes = sara_cast_succes_q.get_single_mut().unwrap();
+                *sara_cast_succes = Visibility::Visible;
                 plays_button_in_audio(&mut commands, &button_in_audio);
                 *background_color = FIGHT_UI_ACTIONED_BUTTON_COLOR.into();
-                player_attack(&player_status, &mut event_writter, &mut combat_log_event_writer);
+                player_attack(
+                    &player_status,
+                    &mut event_writter,
+                    &mut combat_log_event_writer,
+                );
                 next_fight_state.set(FightState::DamageHappening);
                 println!("DAMAGE HAPPENING");
             }
@@ -193,7 +206,7 @@ pub fn interact_with_defend_button(
     button_in_audio: Res<ButtonInAudio>,
     mut next_fight_state: ResMut<NextState<FightState>>,
     mut player_defending: ResMut<PlayerIsDefending>,
-    mut combat_log_event_writer: EventWriter<CombatLogEvent>
+    mut combat_log_event_writer: EventWriter<CombatLogEvent>,
 ) {
     if let Ok((defend_button_entity, mut background_color)) = defend_button_q.get_single_mut() {
         for event in events.iter() {
@@ -202,12 +215,10 @@ pub fn interact_with_defend_button(
                 player_defending.0 = true;
                 *background_color = FIGHT_UI_ACTIONED_BUTTON_COLOR.into();
                 println!("Player is defending");
-                combat_log_event_writer.send(
-                    CombatLogEvent {
-                        log: "Player is defending".to_string(),
-                        color: FIGHT_COMBAT_LOG_TEXT_COLOR
-                    }
-                );
+                combat_log_event_writer.send(CombatLogEvent {
+                    log: "Player is defending".to_string(),
+                    color: FIGHT_COMBAT_LOG_TEXT_COLOR,
+                });
                 next_fight_state.set(FightState::DamageHappening);
             }
         }
@@ -224,7 +235,7 @@ pub fn interact_with_escape_button(
     window_query: Query<&Window, With<PrimaryWindow>>,
     asset_server: Res<AssetServer>,
     mut player_status: ResMut<PlayerStatus>,
-    mut combat_log_event_writer: EventWriter<CombatLogEvent>
+    mut combat_log_event_writer: EventWriter<CombatLogEvent>,
 ) {
     if let Ok((escape_button_entity, mut background_color)) = escape_button_q.get_single_mut() {
         for event in events.iter() {
@@ -241,23 +252,19 @@ pub fn interact_with_escape_button(
                 if player_escapes {
                     player_status.bad_luck_protection = 0.;
                     println!("Player Escapes!");
-                    combat_log_event_writer.send(
-                        CombatLogEvent {
-                            log: format!("Player Escapes!"),
-                            color: FIGHT_COMBAT_LOG_TEXT_COLOR
-                        }
-                    );
+                    combat_log_event_writer.send(CombatLogEvent {
+                        log: format!("Player Escapes!"),
+                        color: FIGHT_COMBAT_LOG_TEXT_COLOR,
+                    });
                     next_ingame_state.set(InGameState::WorldMap);
                     spawn_single_enemy(&mut commands, &window_query, &asset_server, &player_status);
                 } else {
                     player_status.bad_luck_protection += 0.2;
                     println!("Player tried to escape but the enemy was too fast!");
-                    combat_log_event_writer.send(
-                        CombatLogEvent {
-                            log: format!("Player tried to escape but the enemy was too fast!"),
-                            color: FIGHT_COMBAT_LOG_TEXT_COLOR
-                        }
-                    );
+                    combat_log_event_writer.send(CombatLogEvent {
+                        log: format!("Player tried to escape but the enemy was too fast!"),
+                        color: FIGHT_COMBAT_LOG_TEXT_COLOR,
+                    });
                     next_fight_state.set(FightState::DamageHappening);
                 }
             }
@@ -278,7 +285,7 @@ pub fn interact_with_skill_list_button(
     mut re_focus_event_writter: EventWriter<ReFocusButtonEvent>,
     mut hide_psl_event: EventWriter<HidePlayerSkillList>,
     mut player_status: ResMut<PlayerStatus>,
-    mut combat_log_event_writer: EventWriter<CombatLogEvent>
+    mut combat_log_event_writer: EventWriter<CombatLogEvent>,
 ) {
     if let Ok(skill_buttons) = player_skill_list_button_q.get_single() {
         for event in nav_event_reader.iter() {
@@ -294,12 +301,10 @@ pub fn interact_with_skill_list_button(
                     let player_skill = with_player_skill.get(*skill_button_entity).unwrap();
                     if player_status.mana >= player_skill.mana_cost {
                         println!("Player uses {}!", player_skill.name);
-                        combat_log_event_writer.send(
-                            CombatLogEvent {
-                                log: format!("Player uses {}!", player_skill.name),
-                                color: FIGHT_COMBAT_LOG_TEXT_COLOR
-                            }
-                        );
+                        combat_log_event_writer.send(CombatLogEvent {
+                            log: format!("Player uses {}!", player_skill.name),
+                            color: FIGHT_COMBAT_LOG_TEXT_COLOR,
+                        });
                         player_status.mana -= player_skill.mana_cost;
                         dmg_event_writter.send(PlayerDamageEvent {
                             damage: player_skill.damage,
@@ -319,12 +324,10 @@ pub fn interact_with_skill_list_button(
                         next_fight_state.set(FightState::DamageHappening);
                     } else {
                         println!("Player mana is too low!");
-                        combat_log_event_writer.send(
-                            CombatLogEvent {
-                                log: format!("Player mana is too low!"),
-                                color: FIGHT_COMBAT_LOG_TEXT_COLOR
-                            }
-                        );
+                        combat_log_event_writer.send(CombatLogEvent {
+                            log: format!("Player mana is too low!"),
+                            color: FIGHT_COMBAT_LOG_TEXT_COLOR,
+                        });
                     }
                 }
             }
@@ -530,8 +533,6 @@ pub fn reset_sara_sprites_2(
     *player_sprite = Visibility::Visible;
 }
 
-
-
 fn update_node_1(
     mut combat_log_text_q: Query<&mut Text, With<CombatLogText1>>,
     combat_log: Res<CombatLog>,
@@ -684,7 +685,7 @@ fn update_node_10(
 
 fn despawn_combat_log(
     mut commands: Commands,
-    combat_log_root_q: Query<Entity, With<CombatLogRoot>>
+    combat_log_root_q: Query<Entity, With<CombatLogRoot>>,
 ) {
     if let Ok(combat_log_root_entity) = combat_log_root_q.get_single() {
         commands.entity(combat_log_root_entity).despawn_recursive();
@@ -698,3 +699,14 @@ fn show_combat_log(
         *combat_log_vis = Visibility::Visible;
     }
 }
+
+/*fn show_combat_log(
+    combat_log_text_q: Query<Entity, With<LogText>>,
+    mut visibility_q: Query<&mut Visibility>,
+) {
+    for text_entity in combat_log_text_q.iter() {
+        if let Ok(mut child_vis) = visibility_q.get_mut(text_entity) {
+            *child_vis = Visibility::Visible;
+        }
+    }
+}*/

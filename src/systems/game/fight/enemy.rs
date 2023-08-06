@@ -31,7 +31,7 @@ pub fn spawn_enemy(
             transform: Transform::from_xyz(
                 window.width() - window.width() / 8.0,
                 window.height() - window.height() / 2.0,
-                0.0,
+                800.0,
             ),
             sprite: Sprite {
                 custom_size: Some(Vec2::new(300.0, 300.0)),

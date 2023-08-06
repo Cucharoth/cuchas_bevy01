@@ -142,6 +142,7 @@ fn create_buttons_node(
                 },
                 visibility: Visibility::Hidden,
                 background_color: FIGHT_UI_NODE_BUTTONS_COLOR.into(),
+                z_index: ZIndex::Global(400),
                 ..Default::default()
             },
             PlayerButtonsNode,
@@ -175,6 +176,7 @@ fn create_attack_button(
                 visibility: Visibility::Inherited,
                 background_color: FIGHT_UI_BUTTON_COLOR.into(),
                 border_color: Color::GOLD.into(),
+                z_index: ZIndex::Global(500),
                 ..Default::default()
             },
             FightAttackButton,
@@ -217,6 +219,7 @@ fn create_skill_button(
                 },
                 visibility: Visibility::Inherited,
                 background_color: FIGHT_UI_BUTTON_COLOR.into(),
+                z_index: ZIndex::Global(500),
                 ..Default::default()
             },
             FightSkillButton,
@@ -272,7 +275,7 @@ fn create_skill_list_node(parent: &mut ChildBuilder, asset_server: &Res<AssetSer
                 },
                 visibility: Visibility::Hidden,
                 background_color: FIGHT_UI_NODE_BUTTONS_COLOR.into(),
-                z_index: ZIndex::Global(900),
+                z_index: ZIndex::Global(550),
                 ..Default::default()
             },
             SkillListNode,
@@ -300,6 +303,7 @@ fn create_node_skill_1(parent: &mut ChildBuilder, asset_server: &Res<AssetServer
                 },
                 visibility: Visibility::Inherited,
                 background_color: FIGHT_UI_BUTTON_COLOR.into(),
+                z_index: ZIndex::Global(551),
                 ..Default::default()
             },
             PlayerSkill {
@@ -344,6 +348,7 @@ fn create_node_skill_2(parent: &mut ChildBuilder, asset_server: &Res<AssetServer
                 },
                 visibility: Visibility::Inherited,
                 background_color: FIGHT_UI_BUTTON_COLOR.into(),
+                z_index: ZIndex::Global(551),
                 ..Default::default()
             },
             PlayerSkill {
@@ -388,6 +393,7 @@ fn create_node_skill_3(parent: &mut ChildBuilder, asset_server: &Res<AssetServer
                 },
                 visibility: Visibility::Inherited,
                 background_color: FIGHT_UI_BUTTON_COLOR.into(),
+                z_index: ZIndex::Global(551),
                 ..Default::default()
             },
             PlayerSkill {
@@ -432,6 +438,7 @@ fn create_node_skill_4(parent: &mut ChildBuilder, asset_server: &Res<AssetServer
                 },
                 visibility: Visibility::Inherited,
                 background_color: FIGHT_UI_BUTTON_COLOR.into(),
+                z_index: ZIndex::Global(551),
                 ..Default::default()
             },
             PlayerSkill {
@@ -480,6 +487,7 @@ fn create_def_button(
                 },
                 visibility: Visibility::Inherited,
                 background_color: FIGHT_UI_BUTTON_COLOR.into(),
+                z_index: ZIndex::Global(500),
                 ..Default::default()
             },
             FightDefButton,
@@ -522,6 +530,7 @@ fn create_escape_button(
                 },
                 visibility: Visibility::Inherited,
                 background_color: FIGHT_UI_BUTTON_COLOR.into(),
+                z_index: ZIndex::Global(500),
                 ..Default::default()
             },
             FightEscapeButton,
@@ -571,6 +580,7 @@ fn create_status_node(
                 },
                 visibility: Visibility::Hidden,
                 background_color: FIGHT_UI_BUTTON_COLOR.into(),
+                z_index: ZIndex::Global(500),
                 ..Default::default()
             },
             FightStatusNode,
@@ -665,7 +675,7 @@ fn create_combat_log_buttons(parent: &mut ChildBuilder, asset_server: &Res<Asset
                 justify_content: JustifyContent::Center,
                 //left: Val::Percent(50.),
                 //bottom: Val::Percent(70.),
-                width: Val::Percent(35.0),
+                width: Val::Percent(27.0),
                 height: Val::Percent(30.0),
                 //row_gap: Val::Px(2.0),
                 /*padding: UiRect {
@@ -677,7 +687,8 @@ fn create_combat_log_buttons(parent: &mut ChildBuilder, asset_server: &Res<Asset
                 ..Default::default()
             },
             visibility: Visibility::Hidden,
-            background_color: FIGHT_UI_NODE_BUTTONS_COLOR.into(),
+            background_color: Color::hsla(338.0, 0.8, 0.100, 0.8).into(),
+            z_index: ZIndex::Global(1),
             ..Default::default()
         },
         CombatLogButtons
@@ -714,7 +725,7 @@ fn create_node_combat_log_1(
                 ..Default::default()
             },
             visibility: Visibility::Inherited,
-            background_color: FIGHT_UI_NODE_BUTTONS_COLOR.into(),
+            background_color: FIGHT_COMBAT_LOG_NODE_COLOR.into(),
             ..Default::default()
         }),
     )
@@ -734,6 +745,7 @@ fn create_node_combat_log_1(
                         alignment: TextAlignment::Left,
                         ..Default::default()
                     },
+                    z_index: ZIndex::Global(100),
                     ..Default::default()
                 },
                 CombatLogText1,
@@ -758,7 +770,7 @@ fn create_node_combat_log_2(
                 ..Default::default()
             },
             visibility: Visibility::Inherited,
-            background_color: FIGHT_UI_NODE_BUTTONS_COLOR.into(),
+            background_color: FIGHT_COMBAT_LOG_NODE_COLOR.into(),
             ..Default::default()
         }),
     )
@@ -802,7 +814,7 @@ fn create_node_combat_log_3(
                 ..Default::default()
             },
             visibility: Visibility::Inherited,
-            background_color: FIGHT_UI_NODE_BUTTONS_COLOR.into(),
+            background_color: FIGHT_COMBAT_LOG_NODE_COLOR.into(),
             ..Default::default()
         }),
     )
@@ -846,7 +858,7 @@ fn create_node_combat_log_4(
                 ..Default::default()
             },
             visibility: Visibility::Inherited,
-            background_color: FIGHT_UI_NODE_BUTTONS_COLOR.into(),
+            background_color: FIGHT_COMBAT_LOG_NODE_COLOR.into(),
             ..Default::default()
         }),
     )
@@ -890,7 +902,7 @@ fn create_node_combat_log_5(
                 ..Default::default()
             },
             visibility: Visibility::Inherited,
-            background_color: FIGHT_UI_NODE_BUTTONS_COLOR.into(),
+            background_color: FIGHT_COMBAT_LOG_NODE_COLOR.into(),
             ..Default::default()
         }),
     )
@@ -934,7 +946,7 @@ fn create_node_combat_log_6(
                 ..Default::default()
             },
             visibility: Visibility::Inherited,
-            background_color: FIGHT_UI_NODE_BUTTONS_COLOR.into(),
+            background_color: FIGHT_COMBAT_LOG_NODE_COLOR.into(),
             ..Default::default()
         }),
     )
@@ -978,7 +990,7 @@ fn create_node_combat_log_7(
                 ..Default::default()
             },
             visibility: Visibility::Inherited,
-            background_color: FIGHT_UI_NODE_BUTTONS_COLOR.into(),
+            background_color: FIGHT_COMBAT_LOG_NODE_COLOR.into(),
             ..Default::default()
         }),
     )
@@ -1022,7 +1034,7 @@ fn create_node_combat_log_8(
                 ..Default::default()
             },
             visibility: Visibility::Inherited,
-            background_color: FIGHT_UI_NODE_BUTTONS_COLOR.into(),
+            background_color: FIGHT_COMBAT_LOG_NODE_COLOR.into(),
             ..Default::default()
         }),
     )
@@ -1066,7 +1078,7 @@ fn create_node_combat_log_9(
                 ..Default::default()
             },
             visibility: Visibility::Inherited,
-            background_color: FIGHT_UI_NODE_BUTTONS_COLOR.into(),
+            background_color: FIGHT_COMBAT_LOG_NODE_COLOR.into(),
             ..Default::default()
         }),
     )
@@ -1110,7 +1122,7 @@ fn create_node_combat_log_10(
                 ..Default::default()
             },
             visibility: Visibility::Inherited,
-            background_color: FIGHT_UI_NODE_BUTTONS_COLOR.into(),
+            background_color: FIGHT_COMBAT_LOG_NODE_COLOR.into(),
             ..Default::default()
         }),
     )

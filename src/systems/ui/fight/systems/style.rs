@@ -12,3 +12,4 @@ pub const FIGHT_COMBAT_LOG_TEXT_COLOR: Color = Color::hsl(36.0, 0.50, 0.41);
 pub const FIGHT_COMBAT_LOG_EMPHASIS_TEXT_COLOR: Color = Color::hsl(358.0, 0.82, 0.80);
 pub const FIGHT_COMBAT_LOG_GOOD_TEXT_COLOR: Color = Color::hsl(128., 0.32, 0.43);
 pub const FIGHT_COMBAT_LOG_BAD_TEXT_COLOR: Color = Color::hsl(0., 1., 0.35);
+pub const FIGHT_COMBAT_LOG_NODE_COLOR: Color = Color::hsla(338.0, 0.8, 0.100, 0.);

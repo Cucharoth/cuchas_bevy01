@@ -220,7 +220,12 @@ fn load_background(
             transform: Transform::from_xyz(
                 0.0 + (window.width() / 4.0),
                 window.height() / 2.0,
-                0.0,
+                10.,
+            ),
+            global_transform: GlobalTransform::from_xyz(
+                0.0 + (window.width() / 4.0),
+                window.height() / 2.0,
+                10.,
             ),
             sprite: Sprite {
                 custom_size: Some(Vec2::new(

@@ -10,13 +10,14 @@ use crate::systems::ui::resources::*;
 use bevy::prelude::*;
 use bevy::audio::*;
 use bevy_ui_navigation::{DefaultNavigationPlugins, systems::InputMapping};
+use self::pause_menu::systems::PauseMenuPlugin;
 
 pub struct UiPlugin;
 
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, (set_key_mapping, set_key_sounds))
-        .add_plugins((DefaultNavigationPlugins, MainMenuPlugin, FightUIPlugin));
+        .add_plugins((DefaultNavigationPlugins, MainMenuPlugin, FightUIPlugin, PauseMenuPlugin));
     }
 }
 
@@ -25,7 +26,7 @@ fn set_key_mapping(
 ) {
     input_mapping.key_action = KeyCode::Z;
     input_mapping.key_cancel = KeyCode::X;
-
+    input_mapping.key_free = KeyCode::I;
     //println!("{:?}", input_mapping.key_free);
 }
 
