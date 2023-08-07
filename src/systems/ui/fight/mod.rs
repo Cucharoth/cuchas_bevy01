@@ -5,7 +5,7 @@ pub mod resources;
 use bevy::prelude::*;
 use bevy_ui_navigation::NavRequestSystem;
 
-use crate::prelude::fight::in_fight::FightState;
+use crate::prelude::{fight::in_fight::FightState, GameState};
 use crate::prelude::InGameState;
 use crate::systems::game::fight::turns::events::*;
 use crate::systems::ui::fight::systems::interaction::interactions::*;
@@ -58,10 +58,11 @@ impl Plugin for FightUIPlugin {
                     interact_with_skill_list_button,
                     back_from_skill_list,
                     re_focus_button_handler.after(NavRequestSystem),
-                    button_system
+                    button_system.after(NavRequestSystem).after(interact_with_skill_button)
                 )
                     .run_if(in_state(FightState::PlayerTurn))
-                    .run_if(in_state(InGameState::Fight)),
+                    .run_if(in_state(InGameState::Fight))
+                    //.run_if(in_state(GameState::Running))
             )
             .add_systems(
                 OnExit(FightState::PlayerTurn),

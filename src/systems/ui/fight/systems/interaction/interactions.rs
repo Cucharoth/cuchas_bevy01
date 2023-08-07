@@ -9,6 +9,7 @@ use crate::systems::game::resources::PlayerStatus;
 use crate::systems::ui::fight::events::*;
 use crate::systems::ui::fight::systems::components::*;
 use crate::systems::ui::fight::systems::style::*;
+use crate::systems::ui::pause_menu::systems::components::PauseText;
 use crate::systems::ui::resources::*;
 use crate::systems::ui::{plays_button_in_audio, plays_button_out_audio, plays_focus_change_audio};
 use bevy::audio;
@@ -162,7 +163,7 @@ pub fn interact_with_skill_button(
         (&mut Visibility, &mut Children),
         (With<SkillListNode>, Without<FightPlayer>),
     >,
-    mut focusable_q: Query<&mut Focusable>,
+    mut focusable_q: Query<&mut Focusable, Without<PauseText>>,
     mut player_buttons_q: Query<&mut Children, (With<PlayerButtonsNode>, Without<SkillListNode>)>,
     mut nav_event_request: EventWriter<NavRequest>,
     button_in_audio: Res<ButtonInAudio>,
@@ -279,7 +280,7 @@ pub fn interact_with_skill_list_button(
     mut nav_event_reader: EventReader<NavEvent>,
     with_player_skill: Query<&mut PlayerSkill>,
     mut player_buttons_q: Query<&mut Children, (With<PlayerButtonsNode>, Without<SkillListNode>)>,
-    mut focusable_q: Query<&mut Focusable>,
+    mut focusable_q: Query<&mut Focusable, Without<PauseText>>,
     mut dmg_event_writter: EventWriter<PlayerDamageEvent>,
     mut next_fight_state: ResMut<NextState<FightState>>,
     mut re_focus_event_writter: EventWriter<ReFocusButtonEvent>,
@@ -358,9 +359,9 @@ pub fn despawn_fight_state(
     commands.entity(fight_node_root_entity).despawn_recursive();
 }
 
-fn blocks_main_ui(
+pub fn blocks_main_ui(
     player_buttons_q: &mut Query<&mut Children, (With<PlayerButtonsNode>, Without<SkillListNode>)>,
-    focusable_q: &mut Query<&mut Focusable>,
+    focusable_q: &mut Query<&mut Focusable, Without<PauseText>>,
 ) {
     if let Ok(player_buttons_children) = player_buttons_q.get_single() {
         for child in player_buttons_children {
@@ -421,7 +422,7 @@ pub fn back_from_skill_list(
         (With<SkillListNode>, Without<FightPlayer>),
     >,
     mut player_buttons_q: Query<&mut Children, (With<PlayerButtonsNode>, Without<SkillListNode>)>,
-    mut focusable_q: Query<&mut Focusable>,
+    mut focusable_q: Query<&mut Focusable, Without<PauseText>>,
     mut event_writter: EventWriter<ReFocusButtonEvent>,
     button_out_audio: Res<ButtonOutAudio>,
 ) {
@@ -449,9 +450,9 @@ pub fn back_from_skill_list(
     }
 }
 
-fn unlock_player_buttons(
+pub fn unlock_player_buttons(
     player_buttons_q: &mut Query<&mut Children, (With<PlayerButtonsNode>, Without<SkillListNode>)>,
-    focusable_q: &mut Query<&mut Focusable>,
+    focusable_q: &mut Query<&mut Focusable, Without<PauseText>>,
     event_writer: &mut EventWriter<ReFocusButtonEvent>,
 ) {
     if let Ok(childrens) = player_buttons_q.get_single_mut() {
@@ -469,7 +470,7 @@ fn lock_skill_list(
         (&mut Visibility, &mut Children),
         (With<SkillListNode>, Without<FightPlayer>),
     >,
-    focusable_q: &mut Query<&mut Focusable>,
+    focusable_q: &mut Query<&mut Focusable, Without<PauseText>>,
 ) {
     if let Ok((mut skill_list_visibility, childrens)) = player_skill_list_button_q.get_single_mut()
     {

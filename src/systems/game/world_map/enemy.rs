@@ -74,7 +74,6 @@ pub fn spawn_enemy(
                 .translation
                 .distance(enemy_transform.translation);
             let safe_distance = 200.0;
-            println!("distance: {}, safe_distance: {}", distance, safe_distance);
             if distance > safe_distance {
                 break;
             } else {

@@ -21,3 +21,5 @@ pub struct PauseMenuMainMenuNode;
 #[derive(Component)]
 pub struct PauseMenuMainMenuText;
 
+#[derive(Component)]
+pub struct PauseText;

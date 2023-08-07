@@ -57,6 +57,7 @@ fn create_menu_node(parent: &mut ChildBuilder, asset_server: &Res<AssetServer>) 
                 },
                 visibility: Visibility::Visible,
                 background_color: PAUSE_MENU_BACKGROUND.into(),
+                z_index: ZIndex::Global(999),
                 ..Default::default()
             },
             PauseMenuNode,
@@ -112,7 +113,6 @@ fn create_pause_text_node(parent: &mut ChildBuilder, asset_server: &Res<AssetSer
                 alignment: TextAlignment::Center,
                 ..Default::default()
             },
-            z_index: ZIndex::Global(100),
             ..Default::default()
         },
         PauseMenuText,
@@ -152,10 +152,10 @@ fn create_resume_button(parent: &mut ChildBuilder, asset_server: &Res<AssetServe
                         alignment: TextAlignment::Center,
                         ..Default::default()
                     },
-                    z_index: ZIndex::Global(100),
                     ..Default::default()
                 },
                 PauseMenuResumeText,
+                PauseText,
                 Focusable::default()
             ));
         });
@@ -193,10 +193,10 @@ fn create_main_menu_button(parent: &mut ChildBuilder, asset_server: &Res<AssetSe
                         alignment: TextAlignment::Center,
                         ..Default::default()
                     },
-                    z_index: ZIndex::Global(100),
                     ..Default::default()
                 },
                 PauseMenuMainMenuText,
+                PauseText,
                 Focusable::default()
             ));
         });
