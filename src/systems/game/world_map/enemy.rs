@@ -76,8 +76,6 @@ pub fn spawn_enemy(
             let safe_distance = 200.0;
             if distance > safe_distance {
                 break;
-            } else {
-                println!("TOO CLOSE");
             }
         }
 

@@ -22,7 +22,6 @@ pub fn spawn_player(
     asset_server: Res<AssetServer>,
     sara_sprites: Res<SaraSprites>,
 ) {
-    println!("creating player in fight");
     let window = window_query.get_single().unwrap();
     let texture = asset_server.load("sara_stand.png");
 
@@ -59,7 +58,6 @@ pub fn spawn_player(
         },
         FightPlayer,
     ));
-    println!("{:?}", player_status);
 }
 
 fn despawn_player(mut commands: Commands, fight_player_q: Query<Entity, With<FightPlayer>>) {

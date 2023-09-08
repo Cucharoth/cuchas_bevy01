@@ -42,6 +42,7 @@ impl Plugin for CombatLogTextPlugin {
                 .chain(),
         )
         .add_systems(OnEnter(FightState::PlayerTurn), show_combat_log)
+        .add_systems(OnEnter(FightState::EnemyTurn), show_combat_log)
         .add_systems(OnExit(InGameState::Fight), despawn_combat_log);
     }
 }
@@ -147,7 +148,6 @@ pub fn interact_with_attack_button(
                     &mut combat_log_event_writer,
                 );
                 next_fight_state.set(FightState::DamageHappening);
-                println!("DAMAGE HAPPENING");
             }
         }
     }
@@ -215,7 +215,6 @@ pub fn interact_with_defend_button(
                 plays_button_in_audio(&mut commands, &button_in_audio);
                 player_defending.0 = true;
                 *background_color = FIGHT_UI_ACTIONED_BUTTON_COLOR.into();
-                println!("Player is defending");
                 combat_log_event_writer.send(CombatLogEvent {
                     log: "Player is defending".to_string(),
                     color: FIGHT_COMBAT_LOG_TEXT_COLOR,
@@ -252,7 +251,6 @@ pub fn interact_with_escape_button(
                 let player_escapes = thread_rng().gen_bool(gen_value);
                 if player_escapes {
                     player_status.bad_luck_protection = 0.;
-                    println!("Player Escapes!");
                     combat_log_event_writer.send(CombatLogEvent {
                         log: format!("Player Escapes!"),
                         color: FIGHT_COMBAT_LOG_TEXT_COLOR,
@@ -261,7 +259,6 @@ pub fn interact_with_escape_button(
                     spawn_single_enemy(&mut commands, &window_query, &asset_server, &player_status);
                 } else {
                     player_status.bad_luck_protection += 0.2;
-                    println!("Player tried to escape but the enemy was too fast!");
                     combat_log_event_writer.send(CombatLogEvent {
                         log: format!("Player tried to escape but the enemy was too fast!"),
                         color: FIGHT_COMBAT_LOG_TEXT_COLOR,
@@ -301,7 +298,6 @@ pub fn interact_with_skill_list_button(
 
                     let player_skill = with_player_skill.get(*skill_button_entity).unwrap();
                     if player_status.mana >= player_skill.mana_cost {
-                        println!("Player uses {}!", player_skill.name);
                         combat_log_event_writer.send(CombatLogEvent {
                             log: format!("Player uses {}!", player_skill.name),
                             color: FIGHT_COMBAT_LOG_TEXT_COLOR,
@@ -324,7 +320,6 @@ pub fn interact_with_skill_list_button(
 
                         next_fight_state.set(FightState::DamageHappening);
                     } else {
-                        println!("Player mana is too low!");
                         combat_log_event_writer.send(CombatLogEvent {
                             log: format!("Player mana is too low!"),
                             color: FIGHT_COMBAT_LOG_TEXT_COLOR,
@@ -484,10 +479,14 @@ fn lock_skill_list(
 }
 
 pub fn re_focus_button_handler(
+    mut attack_button_q: Query<(&mut BorderColor), With<FightAttackButton>>,
     mut event_reader: EventReader<ReFocusButtonEvent>,
     mut nav_writer_event: EventWriter<NavRequest>,
 ) {
     for event in event_reader.iter() {
+        if let Ok(mut attack_button_border) = attack_button_q.get_single_mut() {
+            attack_button_border.0 = FIGHT_UI_FOCUSED_NODE_COLOR.into();
+        }
         nav_writer_event.send(NavRequest::FocusOn(event.0))
     }
 }

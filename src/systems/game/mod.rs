@@ -29,6 +29,7 @@ pub enum GameState {
     Running,
     #[default]
     Paused,
+    Transition
 }
 
 #[derive(States, Debug, Clone, Copy, Eq, PartialEq, Hash, Default)]

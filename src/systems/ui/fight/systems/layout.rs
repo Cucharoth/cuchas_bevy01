@@ -3,8 +3,6 @@ use crate::systems::ui::fight::systems::components::*;
 use crate::systems::ui::fight::systems::style::*;
 use bevy::prelude::*;
 
-use bevy_ui_navigation::prelude::FocusAction;
-use bevy_ui_navigation::prelude::FocusState;
 use bevy_ui_navigation::prelude::Focusable;
 use bevy_ui_navigation::prelude::MenuBuilder;
 use bevy_ui_navigation::systems::InputMapping;

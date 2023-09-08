@@ -1,6 +1,7 @@
 use super::components::*;
 use crate::prelude::*;
 use bevy::{window::PrimaryWindow, utils::HashMap};
+use rand::{random, thread_rng, Rng};
 
 pub struct EnemyPlugin;
 
@@ -18,14 +19,13 @@ pub fn spawn_enemy(
     window_query: Query<&Window, With<PrimaryWindow>>,
 ) {
     let window = window_query.get_single().unwrap();
-
+    let enemy_speed = thread_rng().gen_range(91..102) as f32; // [min, max)
     let enemy = Enemy {
         health: 100.,
         damage: 10.,
-        speed: 80.,
+        speed: enemy_speed,
         debuffs: HashMap::new()
     };
-    println!("{:?}", &enemy);
     commands.spawn((
         SpriteBundle {
             transform: Transform::from_xyz(

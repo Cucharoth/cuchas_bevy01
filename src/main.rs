@@ -41,7 +41,7 @@ fn main() {
                 .build(),
             GamePlugin,
             UiPlugin,
-            DevPlugin,
+            //DevPlugin,
         ))
         .add_systems(Startup, (spawn_camera, set_window_icon))
         .run();

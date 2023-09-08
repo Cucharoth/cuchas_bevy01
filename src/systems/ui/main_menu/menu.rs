@@ -1,4 +1,5 @@
 use bevy::audio::*;
+use bevy::scene::InstanceId;
 use bevy_ui_navigation::NavRequestSystem;
 
 use crate::prelude::*;
@@ -24,7 +25,8 @@ impl Plugin for MainMenuPlugin {
                 interact_with_play_button,
                 interact_with_exit_button,
             )
-                .after(NavRequestSystem),
+                .after(NavRequestSystem)
+                .run_if(in_state(AppState::MainMenu))
         );
     }
 }

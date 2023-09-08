@@ -4,7 +4,7 @@ use crate::systems::ui::pause_menu::systems::components::*;
 use crate::systems::ui::pause_menu::systems::style::*;
 
 
-pub fn pause_menu_root(mut commands: Commands, asset_server: Res<AssetServer>) {
+pub fn create_pause_menu_root(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands
         .spawn((
             NodeBundle {
@@ -96,7 +96,6 @@ fn create_pause_text_node(parent: &mut ChildBuilder, asset_server: &Res<AssetSer
                 background_color: PAUSE_MENU_BUTTON_BACKGROUND.into(),
                 ..Default::default()
             },
-            PauseRootNode,
         ))
         .with_children(|parent| {
         parent.spawn((

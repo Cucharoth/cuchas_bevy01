@@ -17,7 +17,6 @@ pub fn player_attack(
     let attack_is_crit = thread_rng().gen_bool(0.5);
     let damage_amount = player_status.damage;
     if attack_is_crit {
-        println!("CRIT!");
         combat_log_event_writer.send(
             CombatLogEvent {
                 log: "CRIT!".to_string(),
@@ -46,7 +45,6 @@ pub fn player_does_damage_check(
     for event in event_reader.iter() {
         for mut enemy in enemy_query.iter_mut() {
             let player_damage = event.damage;
-            println!("Player does {:?} damage to the enemy!", player_damage);
             combat_log_event_writer.send(
                 CombatLogEvent {
                     log: format!("Player does {:?} damage to the enemy!", player_damage),
@@ -59,7 +57,6 @@ pub fn player_does_damage_check(
                     Debuff::Freezing => {
                         let is_applied = thread_rng().gen_bool(0.6);
                         if is_applied {
-                            println!("Player applies {:?}", debuff);
                             combat_log_event_writer.send(
                                 CombatLogEvent {
                                     log: format!("Player applies {:?}", debuff),
@@ -70,7 +67,6 @@ pub fn player_does_damage_check(
                                 .debuffs
                                 .insert(debuff, (event.debuff_duration.unwrap(), player_damage));
                         } else {
-                            println!("Enemy resisted the Freezing!");
                             combat_log_event_writer.send(
                                 CombatLogEvent {
                                     log: format!("Enemy resisted the Freezing!"),
@@ -80,7 +76,6 @@ pub fn player_does_damage_check(
                         }
                     }
                     Debuff::Burning => {
-                        println!("Player applies {:?}", debuff);
                         combat_log_event_writer.send(
                             CombatLogEvent {
                                 log: format!("Player applies {:?}", debuff),
@@ -114,21 +109,21 @@ pub fn fight_lost_timer(mut commands: Commands) {
     commands.init_resource::<FightLostTimer>();
 }
 
-pub fn damage_happening_ticker(time: Res<Time>, mut timer: Option<ResMut<DamageHappeningTimer>>) {
+pub fn damage_happening_ticker(time: Res<Time>, timer: Option<ResMut<DamageHappeningTimer>>) {
     if let Some(mut timer) = timer {
         timer.timer.tick(time.delta());
         //println!("{:?}", timer.timer);
     }
 }
 
-pub fn fight_win_ticker(time: Res<Time>, mut timer: Option<ResMut<FightWinTimer>>) {
+pub fn fight_win_ticker(time: Res<Time>, timer: Option<ResMut<FightWinTimer>>) {
     if let Some(mut timer) = timer {
         timer.timer.tick(time.delta());
         //println!("{:?}", timer.timer);
     }
 }
 
-pub fn fight_lost_ticker(time: Res<Time>, mut timer: Option<ResMut<FightLostTimer>>) {
+pub fn fight_lost_ticker(time: Res<Time>, timer: Option<ResMut<FightLostTimer>>) {
     if let Some(mut timer) = timer {
         timer.timer.tick(time.delta());
         //println!("{:?}", timer.timer);
@@ -154,7 +149,6 @@ pub fn damage_happening_timer_check(
                         color: FIGHT_COMBAT_LOG_EMPHASIS_TEXT_COLOR
                     }
                 );
-                println!("ENEMY TURN")
             } else {
                 next_fight_state.set(FightState::PlayerTurn);
                 combat_log_event_writer.send(
@@ -163,7 +157,6 @@ pub fn damage_happening_timer_check(
                         color: FIGHT_COMBAT_LOG_EMPHASIS_TEXT_COLOR
                     }
                 );
-                println!("PLAYER TURN")
             }
         }
     }
@@ -189,7 +182,6 @@ pub fn enemy_turn(
                 }
                 Debuff::Burning => {
                     let burning_amount = player_damage * 0.20;
-                    println!("Enemy is burning!, suffers {} damage", burning_amount);
                     combat_log_event_writer.send(
                         CombatLogEvent {
                             log: format!("Enemy is burning!, suffers {} damage", burning_amount),
@@ -212,7 +204,6 @@ pub fn enemy_turn(
             }
         }
 
-        println!("ENEMY DOES SOMETHING!");
         combat_log_event_writer.send(
             CombatLogEvent {
                 log: format!("ENEMY DOES SOMETHING!"),
@@ -223,7 +214,6 @@ pub fn enemy_turn(
         let enemy_damage = 20.;
         // frozen
         if enemy_is_frozen {
-            println!("Enemy is Frozen!");
             combat_log_event_writer.send(
                 CombatLogEvent {
                     log: format!("Enemy is Frozen!"),
@@ -232,7 +222,6 @@ pub fn enemy_turn(
             );
             next_fight_state.set(FightState::DamageHappening);
         } else if enemy_is_blind {
-            println!("Enemy CAN'T C");
             combat_log_event_writer.send(
                 CombatLogEvent {
                     log: format!("Enemy CAN'T C"),
@@ -258,7 +247,6 @@ pub fn enemy_does_damage_check(
         let mut enemy_damage = event.0;
         if player_is_defending {
             enemy_damage -= enemy_damage * 0.25;
-            println!("Enemy does {} damage to the player", enemy_damage);
             combat_log_event_writer.send(
                 CombatLogEvent {
                     log: format!("Enemy does {} damage to the player", enemy_damage),
@@ -267,7 +255,6 @@ pub fn enemy_does_damage_check(
             );
             player_status.health -= enemy_damage;
         } else {
-            println!("Enemy does {} damage to the player", enemy_damage);
             combat_log_event_writer.send(
                 CombatLogEvent {
                     log: format!("Enemy does {} damage to the player", enemy_damage),
@@ -287,7 +274,6 @@ pub fn check_if_enemy_is_dead(
     let (enemy, mut enemy_visibility) = enemy_q.get_single_mut().unwrap();
     if enemy.health <= 0. {
         *enemy_visibility = Visibility::Hidden;
-        println!("Enemy is dead!");
         combat_log_event_writer.send(
             CombatLogEvent {
                 log: format!("Enemy is dead!"),
@@ -307,8 +293,8 @@ pub fn win_timer_check(
     if let Some(damage_timer) = damage_timer {
         if damage_timer.timer.finished() {
             commands.remove_resource::<FightWinTimer>();
-            let bonus_hp = 15.;
-            let bonus_mp = 15.;
+            let bonus_hp = 50.;
+            let bonus_mp = 50.;
             //println!("{}", player_status.health + bonus_hp );
             player_status.health = if (player_status.health + bonus_hp) < 100. {
                 player_status.health + bonus_hp 
@@ -335,7 +321,6 @@ pub fn check_if_player_is_dead(
     mut combat_log_event_writer: EventWriter<CombatLogEvent>
 ) {
     if player_status.health <= 0. {
-        println!("Player is dead.. GG.");
         combat_log_event_writer.send(
             CombatLogEvent {
                 log: format!("Player is dead.. GG."),

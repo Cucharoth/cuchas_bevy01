@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy_ui_navigation::prelude::{FocusState, Focusable, NavEvent, NavRequest};
 
+use super::events::ReFocusPauseMenuEvent;
 use super::style::*;
 use crate::prelude::fight::in_fight::FightState;
 use crate::prelude::{GameState, InGameState};
@@ -72,20 +73,31 @@ pub fn show_pause_menu(
     mut player_buttons_q: Query<&mut Children, (With<PlayerButtonsNode>, Without<SkillListNode>)>,
     mut focusable_q: Query<&mut Focusable, Without<PauseText>>,
     mut nav_event: EventWriter<NavRequest>,
+    mut re_focus_event: EventWriter<ReFocusPauseMenuEvent>,
 ) {
+    re_focus_event.send(ReFocusPauseMenuEvent(true));
     if let Ok(mut pause_menu_vis) = pause_menu_node_q.get_single_mut() {
         *pause_menu_vis = Visibility::Visible;
         blocks_main_ui(&mut player_buttons_q, &mut focusable_q);
 
         for mut text_focusable in pause_menu_text_q.iter_mut() {
-            println!("desblockeando");
             text_focusable.unblock();
         }
 
         if let Ok((resume_button_entity, mut text)) = resumen_button_q.get_single_mut() {
-            text.sections[0].style.color = PAUSE_MENU_FOCUSED_BUTTON_TEXT.into();
+            re_focus_event.send(ReFocusPauseMenuEvent(true));
             nav_event.send(NavRequest::FocusOn(resume_button_entity));
+            text.sections[0].style.color = Color::BLUE.into();
         }
+    }
+}
+
+pub fn test_color_change(
+    pause_menu_text_q: Query<(&BorderColor), (Changed<BorderColor>, With<FightAttackButton>)>,
+) {
+    if let Ok(pause_menu_text) = pause_menu_text_q.get_single() {
+        let color = pause_menu_text.0;
+        println!("{:?}", color);
     }
 }
 
@@ -99,14 +111,34 @@ pub fn hide_pause_menu(
     mut focusable_q: Query<&mut Focusable, Without<PauseText>>,
     mut event_writer: EventWriter<ReFocusButtonEvent>,
 ) {
-    if let Ok(mut pause_menu_vis) = pause_menu_node_q.get_single_mut() {
-        for mut text_focusable in pause_menu_text_q.iter_mut() {
-            // iterando sobre botones y no el texto!!! FIIIX
-            println!("blockeando");
-            *text_focusable = text_focusable.clone().blocked();
+    if let Ok(pause_menu_vis) = pause_menu_node_q.get_single_mut() {
+        for text_focusable in pause_menu_text_q.iter_mut() {
+            //*text_focusable = text_focusable.clone().blocked();
         }
 
-        *pause_menu_vis = Visibility::Hidden;
+        //*pause_menu_vis = Visibility::Hidden;
         unlock_player_buttons(&mut player_buttons_q, &mut focusable_q, &mut event_writer);
+    }
+}
+
+pub fn update_focus_color(
+    mut resumen_button_q: Query<(&mut Text), With<PauseMenuResumeText>>,
+    mut focus_event_reader: EventReader<ReFocusPauseMenuEvent>,
+) {
+    for event in focus_event_reader.iter() {
+        if event.0 == true {
+            if let Ok(mut resume_button_text) = resumen_button_q.get_single_mut() {
+                resume_button_text.sections[0].style.color = PAUSE_MENU_FOCUSED_BUTTON_TEXT.into()
+            }
+        }
+    }
+}
+
+pub fn despawn_pause_menu(
+    mut commands: Commands,
+    pause_menu_root: Query<Entity, With<PauseRootNode>>,
+) {
+    if let Ok(pause_menu_root_entity) = pause_menu_root.get_single() {
+        commands.entity(pause_menu_root_entity).despawn_recursive();
     }
 }

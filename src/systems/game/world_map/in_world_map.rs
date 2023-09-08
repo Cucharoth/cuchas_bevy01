@@ -108,7 +108,6 @@ pub fn enemy_hit_player(
             //let enemy_radius = ENEMY_SIZE.0 / 2.0;
             let collision_distance = 50.;
             if distance < collision_distance {
-                println!("Collision!, ATTACK");
                 player_status.transform = *player_transform;
                 commands.insert_resource(PlayerEntity {
                     entity: player_entity,
@@ -126,7 +125,7 @@ pub fn enemy_hit_player(
                     ..Default::default()
                 });
                 commands.init_resource::<AfterEnemyCollisionTimer>();
-                next_game_state.set(GameState::Paused);
+                next_game_state.set(GameState::Transition);
                 audio_control.get_single().unwrap().set_volume(0.4);
             }
         }
@@ -139,7 +138,7 @@ pub fn global_timer_update(
 ) {
     if let Some(collision_timer) = &mut collision_timer {
         let time_value = collision_timer.timer.tick(time.delta());
-        println!("{:?}", time_value);
+        //println!("{:?}", time_value);
     }
 }
 
@@ -152,7 +151,6 @@ pub fn timer_after_collission_check(
     if let Some(timer) = &collision_timer {
         if timer.timer.finished() {
             commands.remove_resource::<AfterEnemyCollisionTimer>();
-            println!("FIGHT STATE");
             next_state.set(InGameState::Fight);
             next_game_state.set(GameState::Running);
         }

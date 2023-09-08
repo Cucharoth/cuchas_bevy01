@@ -9,6 +9,7 @@ use crate::components::Player;
 use crate::fight::components::Enemy;
 use crate::prelude::*;
 use crate::systems::game::fight::turns::resources::*;
+use crate::systems::ui::fight::systems::style::*;
 use bevy::audio::*;
 use bevy::transform;
 use bevy::window::PrimaryWindow;
@@ -148,6 +149,7 @@ fn intro_timer_check(
     intro_timer: Res<IntroTime>,
     mut next_fight_state: ResMut<NextState<FightState>>,
     mut player_active_last_turn: ResMut<PlayerActiveLastTurn>,
+    mut combat_log_event_writer: EventWriter<CombatLogEvent>
 ) {
     if intro_timer.timer.finished() {
         commands.remove_resource::<IntroTime>();
@@ -163,11 +165,27 @@ fn intro_timer_check(
         if player_starts {
             next_fight_state.set(FightState::PlayerTurn);
             player_active_last_turn.0 = true;
-            println!("PLAYER TURN")
+            combat_log_event_writer.send(
+                CombatLogEvent {
+                    log: format!("PLAYER TURN"),
+                    color: FIGHT_COMBAT_LOG_EMPHASIS_TEXT_COLOR
+                }
+            );
         } else {
             next_fight_state.set(FightState::EnemyTurn);
             player_active_last_turn.0 = false;
-            println!("ENEMY TURN")
+            combat_log_event_writer.send(
+                CombatLogEvent {
+                    log: format!("THE ENEMY SURPRISES YOU!"),
+                    color: FIGHT_COMBAT_LOG_EMPHASIS_TEXT_COLOR
+                }
+            );
+            combat_log_event_writer.send(
+                CombatLogEvent {
+                    log: format!("ENEMY TURN"),
+                    color: FIGHT_COMBAT_LOG_EMPHASIS_TEXT_COLOR
+                }
+            );
         }
     }
 }

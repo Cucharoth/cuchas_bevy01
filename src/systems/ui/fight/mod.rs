@@ -62,7 +62,7 @@ impl Plugin for FightUIPlugin {
                 )
                     .run_if(in_state(FightState::PlayerTurn))
                     .run_if(in_state(InGameState::Fight))
-                    //.run_if(in_state(GameState::Running))
+                    .run_if(in_state(GameState::Running))
             )
             .add_systems(
                 OnExit(FightState::PlayerTurn),
